@@ -5,6 +5,15 @@ The assignment, part 1: Implementation of the analysis pipeline
 In this first part, we will work with data from a single subject only.
 The data can be downloaded from: http://data.pymvpa.org/datasets/haxby2001/subj1-2010.01.14.tar.gz
 
+Recommended Python packages are:
+
+ - `nibabel <https://nipy.org/nibabel/>`_ for loading the fMRI data.
+ - `nilearn <https://nilearn.github.io/>`_ for plotting the fMRI data.
+ - `pandas <https://pandas.pydata.org/>`_ for reading CSV/TSV files and all your tabular data manipulation needs.
+ - `numpy <https://numpy.org/>`_ for all your array data manipulation needs.
+ - `scipy <https://www.scipy.org/>`_ for many, many useful signal processing functions (e.g. detrending and z-scoring)
+ - `matplotlib <https://matplotlib.org/>`_ for all your plotting needs not served by nilearn.
+
 Loading MRI data
 ================
 
@@ -108,7 +117,7 @@ Here are some tips which may come in useful when implementing the analysis.
 
 Preprocessing the data
 ----------------------
-You will find the ``scipy.signal.detrend`` and ``scipy.stats.zscore`` helpful when pre-processing the data.
+You will find ``scipy.signal.detrend`` and ``scipy.stats.zscore`` helpful when pre-processing the data.
 
 Syncing labels and MRI images
 -----------------------------
@@ -135,7 +144,7 @@ Make sure that your labels and images are always in the same order!
 Making a spherical searchlight
 ------------------------------
 
-An effecive strategy for computing a spherical searchlight surrounding a voxel is the following:
+An effective strategy for computing a spherical searchlight surrounding a voxel is the following:
 
 1. Create a grid of points corresponding to each voxel using ``numpy.ndindex`` (see image below).
 2. Pick the point corresponding to the center voxel of the searchlight 

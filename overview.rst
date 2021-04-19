@@ -1,5 +1,5 @@
 .. warning::
-    The analysis pipeline described below takes very inappropriate shortcuts, so you are hopefully able to program it in a single day.
+    The analysis pipeline described below takes very inappropriate shortcuts, so you are hopefully able to program it in a few days.
     Do not use this analysis pipeline in an actual study!
 
 ======================================
@@ -18,7 +18,7 @@ Confusing terminology notwithstanding, the technique is relatively simple.
 Pre-processing
 --------------
 
-Since we are aiming for an analysis pipeline that can be implemented in a single day (and without the help of fancy toolboxes), we will only do very basic pre-processing of the data.
+Since we are aiming for an analysis pipeline that can be implemented in a few days (and without the help of fancy toolboxes), we will only do very basic pre-processing of the data.
 We will remove the linear trend over time and Z-score the data (=remove mean, make standard deviation be 1).
 
 .. image:: images/preprocessing.png
