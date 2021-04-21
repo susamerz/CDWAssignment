@@ -25,20 +25,12 @@ labels = pd.read_csv('subj1/labels.txt', sep=' ')
 
 def preprocess_chunk(chunk_data):
 
-    processed_data = np.zeros(chunk_data.shape)
-    len_x = len(processed_data[:, 0, 0, 0])
-    len_y = len(processed_data[0, :, 0, 0])
-    len_z = len(processed_data[0, 0, :, 0])
+    print(chunk_data[0:3, 0:3, 0:3, 0:10])
+    detrended = scipy.signal.detrend(chunk_data)
+    z_scored = scipy.stats.zscore(detrended, axis=-1)
+    print(z_scored[0:3, 0:3, 0:3, 0:10])
 
-    for x in range(len_x):
-        for y in range(len_y):
-            for z in range(len_z):
-                detrended = scipy.signal.detrend(chunk_data[x, y, z, :])
-                z_scored = scipy.stats.zscore(detrended)
-                processed_data[x, y, z, :] = z_scored
-
-
-    return processed_data
+    return z_scored
 
 def preprocess_voxel_data(bold_data, labels):
 
@@ -50,7 +42,6 @@ def preprocess_voxel_data(bold_data, labels):
         preprocessed_chunk = preprocess_chunk(bold_chunk)
         processed_bold_np[:, :, :, labels_chunk.index] = preprocessed_chunk
 
-
     return processed_bold_np
 
 def get_bold_in_roi(bold, roi_mask=nib.load('subj1/mask4_vt.nii.gz')):
@@ -59,8 +50,6 @@ def get_bold_in_roi(bold, roi_mask=nib.load('subj1/mask4_vt.nii.gz')):
 
 # Plot anatomy
 #plotting.plot_anat(anat)
-
-
 
 
 def searchlight(center_voxels, radius, search_grid):
@@ -89,6 +78,7 @@ def searchlight(center_voxels, radius, search_grid):
         found_locations = np.array(search_grid)[distances.flatten() <= radius]
         search_results[center_voxel] = found_locations
 
+
     return search_results
 
 # Plot data using a "glass brain"
@@ -96,18 +86,12 @@ def searchlight(center_voxels, radius, search_grid):
 #plotting.plot_glass_brain(some_data)
 
 
-# TODO:
-# - either find a way to link voxel coordinates to single voxel time series OR
-# - preprocess whole dataset
-# Reason: filtering with mask does not (cannot) maintain original 4d structure...(?)
+#voxels_in_roi = data[mask.get_fdata() == 1, :]
+#filter = mask.get_fdata() == 1
 
-voxels_in_roi = data[mask.get_fdata() == 1, :]
-filter = mask.get_fdata() == 1
-print(np.sum(filter))
-print(voxels_in_roi.shape)
-processed_bold_data = preprocess_voxel_data(voxels_in_roi, labels)
+processed_bold_data = preprocess_voxel_data(data, labels)
 print(processed_bold_data[0:3, 0:3, 0:3, 0:10])
 preprocessed_image = nib.Nifti1Image(processed_bold_data, bold.affine)
-
+#nib.save(preprocessed_image, 'images/preprocessed_img_subj1.nii.gz')
 slice = preprocessed_image.slicer[:, :, :, 0]
 plotting.plot_glass_brain(slice)
