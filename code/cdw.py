@@ -108,7 +108,8 @@ def getRSA(bold_orig, mask, rad, conds):
     i = 0
     for ind in zip(inds[0], inds[1], inds[2]):
         
-        print(f'Processing voxel {ind} -- {i}')
+        if i%100 == 0:
+            print(f'{i} voxels done...')
         
         # Calc rdm in searchlight
         rdm_bold = calculate_boldRDM(bold_conds, ind, rad)
@@ -117,8 +118,6 @@ def getRSA(bold_orig, mask, rad, conds):
         rsa_brain[ind] = calculate_RSA(rdm_bold, rdm_model)
         
         i += 1
-        if i > 10:
-            break
         
     # Wrap up as nifti
     rsa_brain_nii = nib.Nifti1Image(rsa_brain, bold_orig.affine, bold_orig.header)
@@ -151,6 +150,7 @@ def create_modelRDM(conds):
 def calculate_boldRDM(bold, ind, rad):
     # calc the rdm in given searchlight beam
     
+    # TODO: fix the radius thing
     # Get voxels inside radius (square for now)
     voxels = bold[ind[0]-rad: ind[0]+rad+1,
                    ind[1]-rad: ind[1]+rad+1,
@@ -160,12 +160,14 @@ def calculate_boldRDM(bold, ind, rad):
     n_frames = voxels.shape[-1]
     voxels = np.vstack([ voxels[:,:,:,i].flatten() for i in range(n_frames) ])
     
-    # Calculate dissimilarity (1 - r) for each frame pair
-    rdm_bold = np.ones((n_frames,n_frames))
-    for i in range(n_frames):
-        for j in range(n_frames):
-            (r,p) = stats.pearsonr(voxels[i,:], voxels[j,:]) # mri frames are rows
-            rdm_bold[i,j] = 1 - r
+    # Matrix approach to calculating the r (scipy pair-wise is SLOW)
+    # NOTE: this works only as long as there are no nans!
+    if not np.isnan(voxels).any():
+        rdm_bold = 1 - np_pearson_cor(voxels.T, voxels.T)
+    else:
+        raise RuntimeError
+        print('Nans in voxels! Aborting.')
+        return None
     
     return rdm_bold
 
@@ -179,3 +181,14 @@ def time2conds(bold, conds):
     for k in conds.keys():
         yield bold.get_fdata()[:,:,:,conds[k]]
 
+def np_pearson_cor(x, y):
+    # From https://cancerdatascience.org/blog/posts/pearson-correlation/
+    
+    xv = x - x.mean(axis=0)
+    yv = y - y.mean(axis=0)
+    xvss = (xv * xv).sum(axis=0)
+    yvss = (yv * yv).sum(axis=0)
+    result = np.matmul(xv.transpose(), yv) / np.sqrt(np.outer(xvss, yvss))
+    
+    # bound the values to -1 to 1 in the event of precision issues
+    return np.maximum(np.minimum(result, 1.0), -1.0)

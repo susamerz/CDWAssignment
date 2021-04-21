@@ -55,3 +55,5 @@ rsa_brain = cdw.getRSA(bold_prep, mask, rad, conds)
 #%% Plot
 plotting.plot_glass_brain(rsa_brain)
 
+#%% Save for later
+nib.save(rsa_brain,os.path.join(datadir,subj,'rsa_brain.nii'))
