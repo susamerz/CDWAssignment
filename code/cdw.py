@@ -6,13 +6,15 @@ Functions for pipeline steps
 Run with the interactive script
 
 @author:  jenni.saaristo@helsinki.fi
-@version: 2021-04-14
-@notes:   
+@version: 2021-04-15
+@notes:   Reorganised structure, spherical searchlight 
 """
 
 from scipy import signal, stats
+from scipy.spatial.distance import pdist, squareform, cdist
 import numpy as np
 import nibabel as nib
+from itertools import compress
 
 def load_preprocess(boldpath, labels):
     """
@@ -64,74 +66,44 @@ def load_preprocess(boldpath, labels):
     print('Done.')
     return bold_prep
 
-
-def getRSA(bold_orig, mask, rad, conds):
+def reorder_data(bold_orig, labels, select_labels):
     """
-    Get RSA scores by searchlight
-    
-    Get a brain of RSA scores, calculated with a given radius of searchlight
-    for voxels inside a given mask. Conds should give indices of MRI frames for
-    each condition.
+    Reorders BOLD data accoring to selected conditions
 
     Parameters
     ----------
     bold_orig : Nifti1Image
-        The original 4D BOLD data in chronological (time) order.
-    mask : Nifti1Image
-        A 3D mask to restrict the analysis with.
-    rad : int
-        Radius of searchlight (voxels). This currently defines a square, not
-        a sphere -- subject to revision at a later point.
-    conds : dict
-        Dictionary with condition names as keys and arrays of MRI frame
-        indices as values.
+        Original 4D BOLD data.
+    labels : DataFrame
+        Condition label of each MRI frame.
+    select_labels : str array
+        Labels of conditions selected for analysis.
 
     Returns
     -------
-    rsa_brain : numpy array
-        RSA-scores in brain space.
+    conds : dict
+        Dictionary that gives condition labels and their concomitant MRI
+        frame indices.
+    bold_conds : Nifti1Image
+        Reordered 4D BOLD data.
+
     """
     
-    rsa_brain = np.zeros(mask.shape)
+    # Get the inds of the MRI frames that pertain to each label, i.e. condition
+    conds = {}
+    for lab in select_labels:
+        conds[lab] = labels.query('labels == @lab').index
     
-    # Reorder bold data into "condition order"  & drop extra frames
+    # Reorder data
     print('Reordering data and dropping unnecessary MRI frames...')
     bold_conds = np.concatenate(list(time2conds(bold_orig, conds)), axis=-1)
-    print('Done. Calculating RSA...')
-    
-    rdm_model = create_modelRDM(conds)
-
-    inds = np.where(mask.get_fdata() == 1)
-    print(f'Total number of voxels: {len(inds[0])}')
-    
-    # For each voxel in mask:
-    i = 0
-    for ind in zip(inds[0], inds[1], inds[2]):
-        
-        if i%100 == 0:
-            print(f'{i} voxels done...')
-        
-        # Calc rdm in searchlight
-        rdm_bold = calculate_boldRDM(bold_conds, ind, rad)
-        
-        # Calc rsa and save it
-        rsa_brain[ind] = calculate_RSA(rdm_bold, rdm_model)
-        
-        i += 1
-        
-    # Wrap up as nifti
-    rsa_brain_nii = nib.Nifti1Image(rsa_brain, bold_orig.affine, bold_orig.header)
-    
-    # return rsa brain
     print('Done.')
-    return rsa_brain_nii
+    
+    return (conds, bold_conds)
 
-# =============================================================================
-#                        INTERNAL HELPER FUNCTIONS
-# =============================================================================
 
 def create_modelRDM(conds):
-    # makes the model rdm, given conds
+    # Makes the model RDM, given conditions
     
     # Get framecounts
     lens = [len(conds[k]) for k in conds.keys()]
@@ -147,48 +119,92 @@ def create_modelRDM(conds):
     
     return rdm_model
 
-def calculate_boldRDM(bold, ind, rad):
-    # calc the rdm in given searchlight beam
+
+def calculate_maskRSA(bold, mask, rad, rdm_model):
+    """
+    Get RSA scores inside mask by searchlight
     
-    # TODO: fix the radius thing
-    # Get voxels inside radius (square for now)
-    voxels = bold[ind[0]-rad: ind[0]+rad+1,
-                   ind[1]-rad: ind[1]+rad+1,
-                   ind[2]-rad: ind[2]+rad+1, :]
+    Get a brain of RSA scores, calculated with a given radius of searchlight
+    for voxels inside a given mask, and compared to model RDM.
+
+    Parameters
+    ----------
+    bold_orig : Nifti1Image
+        The original 4D BOLD data in chronological (time) order.
+    mask : Nifti1Image
+        A 3D mask to restrict the analysis with.
+    rad : int
+        Radius of searchlight (voxels). This currently defines a square, not
+        a sphere -- subject to revision at a later point.
+    rdm_model : ndarray
+        The model RDM to compare the searchlight RDM to.
+
+    Returns
+    -------
+    rsa_brain : ndarray
+        RSA-scores in 3D brain space.
+        
+    """
+    print('Calculating RSA...')
+    rsa_brain = np.zeros(mask.shape)
     
-    # Flatten in all but last dimension (MRI frames)
-    n_frames = voxels.shape[-1]
-    voxels = np.vstack([ voxels[:,:,:,i].flatten() for i in range(n_frames) ])
+    # Get (x,y,z) inds of all voxels inside mask
+    inds = np.where(mask.get_fdata() == 1)
+    print(f'Total number of voxels: {len(inds[0])}')
     
-    # Matrix approach to calculating the r (scipy pair-wise is SLOW)
-    # NOTE: this works only as long as there are no nans!
-    if not np.isnan(voxels).any():
-        rdm_bold = 1 - np_pearson_cor(voxels.T, voxels.T)
-    else:
-        raise RuntimeError
-        print('Nans in voxels! Aborting.')
-        return None
+    # Get searchlight kernel (same for every voxel)
+    kernel = make_searchlight(rad)
+    
+    # For each voxel in mask:
+    i = 0
+    for ind in zip(inds[0], inds[1], inds[2]):
+        
+        if i%100 == 0:
+            print(f'{i} voxels done...')
+        
+        # Calc RDM in searchlight
+        rdm_bold = calculate_boldRDM(bold, ind, kernel)
+        
+        # Calc RSA with model and save it
+        (rho, p) = stats.spearmanr(rdm_bold, rdm_model, axis=None)
+        rsa_brain[ind] = rho
+        
+        i += 1
+    
+    # Return RSA brain
+    print('Done.')
+    return rsa_brain
+
+# =============================================================================
+#                        INTERNAL HELPER FUNCTIONS
+# =============================================================================
+    
+
+def calculate_boldRDM(bold, ind, kernel):
+    # Calculates the data RDM in the given searchlight around voxel index ind
+    
+    # Get the searchlight voxels for this ind
+    voxel_inds = [(ind[0]+k[0], ind[1]+k[1],ind[2]+k[2]) for k in kernel]
+    voxels = np.vstack([bold[v[0],v[1],v[2],:] for v in voxel_inds]).T
+    
+    # Calculate dissimilarity
+    rdm_bold = squareform(pdist(voxels, metric='correlation'))
     
     return rdm_bold
 
-def calculate_RSA(rdm_bold, rdm_model):
-    # take the RDMs and calc their rsa
-    (rho, p) = stats.spearmanr(rdm_bold, rdm_model, axis=None)
-    return rho
+
+def make_searchlight(rad):
+    # Makes a relative searchlight kernel (origo=(0,0,0)) with radius rad
+    
+    # Define a square, then filter out the corners (where dist > rad)
+    rad_square = [(n[0]-rad,n[1]-rad,n[2]-rad) for n in np.ndindex(2*rad+1,2*rad+1,2*rad+1)]
+    distances = cdist(rad_square, [(0,0,0)])
+    kernel = list(compress(rad_square, distances <= rad))
+    
+    return kernel
 
 def time2conds(bold, conds):
     # reorganise bold to conds
     for k in conds.keys():
         yield bold.get_fdata()[:,:,:,conds[k]]
 
-def np_pearson_cor(x, y):
-    # From https://cancerdatascience.org/blog/posts/pearson-correlation/
-    
-    xv = x - x.mean(axis=0)
-    yv = y - y.mean(axis=0)
-    xvss = (xv * xv).sum(axis=0)
-    yvss = (yv * yv).sum(axis=0)
-    result = np.matmul(xv.transpose(), yv) / np.sqrt(np.outer(xvss, yvss))
-    
-    # bound the values to -1 to 1 in the event of precision issues
-    return np.maximum(np.minimum(result, 1.0), -1.0)
