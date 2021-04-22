@@ -1,2 +1,6 @@
 *~
 .*.sw?
+
+# Test data
+*.gz
+subj1
