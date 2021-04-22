@@ -5,7 +5,7 @@ CODE DESIGN WORKSHOP 2021
 Runner script
 
 @author:  jenni.saaristo@helsinki.fi
-@version: 2021-04-15
+@version: 2021-04-22
 @notes:   Reorganised function structure
 """
 import os

@@ -6,8 +6,8 @@ Functions for pipeline steps
 Run with the interactive script
 
 @author:  jenni.saaristo@helsinki.fi
-@version: 2021-04-15
-@notes:   Reorganised structure, spherical searchlight 
+@version: 2021-04-22
+@notes:   Fixed searchlight radius
 """
 
 from scipy import signal, stats
@@ -150,7 +150,7 @@ def calculate_maskRSA(bold, mask, rad, rdm_model):
     
     # Get (x,y,z) inds of all voxels inside mask
     inds = np.where(mask.get_fdata() == 1)
-    print(f'Total number of voxels: {len(inds[0])}')
+    print(f'Number of voxels in mask:: {len(inds[0])}')
     
     # Get searchlight kernel (same for every voxel)
     kernel = make_searchlight(rad)
@@ -199,7 +199,9 @@ def make_searchlight(rad):
     # Define a square, then filter out the corners (where dist > rad)
     rad_square = [(n[0]-rad,n[1]-rad,n[2]-rad) for n in np.ndindex(2*rad+1,2*rad+1,2*rad+1)]
     distances = cdist(rad_square, [(0,0,0)])
-    kernel = list(compress(rad_square, distances <= rad))
+    kernel = list(compress(rad_square, distances < rad))
+    
+    print(f'Number of voxels in searchlight: {len(kernel)}')
     
     return kernel
 
