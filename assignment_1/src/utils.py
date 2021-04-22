@@ -1,4 +1,6 @@
 from pathlib import Path
+
+import numpy as np
 import pandas as pd
 import nibabel as nib
 
@@ -9,19 +11,16 @@ class BrainData:
     This class encapsulates the relevant contents of
     file like `subj1-2010.01.14.tar.gz`.
     """
-    def __init__(self, dpath):
-        self._dpath = Path(dpath)
-        self._bold = nib.load(self._dpath / 'bold.nii.gz')
-        self._labels = pd.read_csv(self._dpath / 'labels.txt', sep=' ')
+    def __init__(self, data, chunks, labels):
+        self.data = data
+        self.chunks = chunks
+        self.labels = labels
 
-    @property
-    def data(self):
-        return self._bold.get_fdata()
-
-    @property
-    def chunks(self):
-        return self._labels.chunks
-
-    @property
-    def labels(self):
-        return self._labels.labels
+    @classmethod
+    def from_directory(cls, dpath):
+        dpath = Path(dpath)
+        bold = nib.load(dpath / 'bold.nii.gz')
+        labels = pd.read_csv(dpath / 'labels.txt', sep=' ')
+        return cls(data=bold.get_fdata(),
+                   chunks=np.array(labels.chunks),
+                   labels=np.array(labels.labels))
