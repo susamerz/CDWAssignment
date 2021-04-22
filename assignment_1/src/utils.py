@@ -17,11 +17,15 @@ class BrainData:
         self.labels = labels
 
     @classmethod
-    def from_directory(cls, dpath):
+    def from_directory(cls, dpath, mask=True):
         dpath = Path(dpath)
         bold = nib.load(dpath / 'bold.nii.gz')
+        data = bold.get_fdata()
+        if mask:
+            mask_data = nib.load(dpath / 'mask4_vt.nii.gz').get_fdata()
+            data = data[mask_data == 1]
         labels = pd.read_csv(dpath / 'labels.txt', sep=' ')
-        return cls(data=bold.get_fdata(),
+        return cls(data=data,
                    chunks=np.array(labels.chunks),
                    labels=np.array(labels.labels, dtype=str))
 
