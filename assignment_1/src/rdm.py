@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
+from scipy.stats import spearmanr
 
 
 def build_rdm(bd):
@@ -18,6 +19,11 @@ def build_model_rdm(bd):
     return corr_tt
 
 
+def calculate_rsa_score(rdm1, rdm2):
+    corr, _ = spearmanr(rdm1.flatten(), rdm2.flatten())
+    return corr
+
+
 if __name__ == '__main__':
     from utils import BrainData
 
@@ -25,6 +31,9 @@ if __name__ == '__main__':
     bd.sort_by_labels()
     rdm = build_rdm(bd)
     model_rdm = build_model_rdm(bd)
+
+    print(f'rdm vs rdm: {calculate_rsa_score(rdm, rdm)}')
+    print(f'rdm vs model: {calculate_rsa_score(rdm, model_rdm)}')
 
     from matplotlib import pyplot as plt
 
