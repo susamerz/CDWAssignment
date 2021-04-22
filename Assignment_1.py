@@ -111,14 +111,17 @@ def standardize_data(dta):
 ### THESE ARE PARAMETERS FOR THE MAIN FUNCTION!
 # main function will be created after I understood what should I do :D 
 #VARIABLES:
+
+data_dir = ''
+
 bold_dta_path = 'subj1/bold.nii.gz'
 mask_path = 'subj1/mask4_vt.nii.gz'
 label_path = 'subj1/labels.txt'
 
 #%%
-bold = nib.load(bold_dta_path)
-mask = nib.load(mask_path)
-labeled_df = pd.read_csv(label_path, sep=' ')
+bold = nib.load(data_dir + bold_dta_path)
+mask = nib.load(data_dir + mask_path)
+labeled_df = pd.read_csv(data_dir + label_path, sep=' ')
 
 # Masking the data
 
