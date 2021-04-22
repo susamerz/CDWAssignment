@@ -50,3 +50,10 @@ class BrainData:
                  data=self.data,
                  chunks=self.chunks,
                  labels=self.labels)
+
+    def sort_by_labels(self):
+        """Sort data by its labels."""
+        s_t = np.argsort(self.labels)
+        self.data = self.data[..., s_t]
+        self.chunks = self.chunks[s_t]
+        self.labels = self.labels[s_t]

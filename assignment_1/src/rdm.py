@@ -4,42 +4,27 @@ from scipy.spatial.distance import pdist, squareform
 
 def build_rdm(bd):
     data = bd.data
-    labels = bd.labels
-
-    # Ensure correct shape
     data_gt = data.reshape(-1, data.shape[-1])
-
-    # Sort according to labels
-    assert data_gt.shape[-1] == len(labels)
-    s_t = np.argsort(labels)
-    label_t = labels[s_t]
-    data_gt = data_gt[:, s_t]
-
-    # Calculate
     corr = pdist(data_gt.T, metric='correlation')
     corr_tt = squareform(corr)
-    return label_t, corr_tt
+    return corr_tt
 
 
 def build_model_rdm(bd):
-    labels = bd.labels
-
-    # Sort according to labels
-    s_t = np.argsort(labels)
-    label_t = labels[s_t]
-
+    label_t = bd.labels
     data_gt = label_t[np.newaxis]
     corr = pdist(data_gt.T, metric=lambda u, v: u != v)
     corr_tt = squareform(corr)
-    return label_t, corr_tt
+    return corr_tt
 
 
 if __name__ == '__main__':
     from utils import BrainData
 
     bd = BrainData.from_npz_file('preprocessed.npz')
-    labels, rdm = build_rdm(bd)
-    labels, model_rdm = build_model_rdm(bd)
+    bd.sort_by_labels()
+    rdm = build_rdm(bd)
+    model_rdm = build_model_rdm(bd)
 
     from matplotlib import pyplot as plt
 
@@ -47,7 +32,7 @@ if __name__ == '__main__':
         fig, ax = plt.subplots()
         plt.imshow(matrix)
         plt.colorbar()
-        ulabels, uindices = np.unique(labels, return_index=True)
+        ulabels, uindices = np.unique(bd.labels, return_index=True)
         plt.xticks(uindices, ulabels, rotation='vertical')
         plt.yticks(uindices, ulabels)
         plt.tight_layout()
