@@ -21,24 +21,15 @@ def preprocess(chunks):
 def main():
 
     bold = nib.load('subj1/bold.nii.gz')
-    '''
+    
     mask = nib.load('subj1/mask4_vt.nii.gz')
-    voxels_in_roi = bold.get_fdata()[mask.get_fdata() == 1, :]
-    
+    voxels_in_roi = bold.get_fdata()[mask.get_fdata() == 1, :]    
     anat = nib.load('subj1/anat.nii.gz')
-    '''
+    
     labels = pd.read_csv('subj1/labels.txt', sep=' ')
-    
-    
-    # do we need also voxels outside of ROI to make searchlights 
-    # centering at all ROI voxels?
-    
-    # how to ectraxt chunks from voxels?
     
     # make 5-dimensional numpy array for chunk data
     # size 40x64x64x[time_length_of_chunk]x11
-    
-    # put data in normal array first
     chunks = [];
     
     for i in range(11):
@@ -47,13 +38,12 @@ def main():
         chunks.append(bold_chunk)
         
     chunks_np = np.array(chunks)
-    #print(np.shape(chunks_np))
     
     # pre-process all chunks
     chunks_np_pp = preprocess(chunks_np)
     
     
-    # make searchlights around each voxel -->loop through voxels and make
+    # make searchlights around each voxel --> loop through voxels and make
     # searchlight centering on each
     
     # compute RDM for each searchlight (needs data from all 11 chunks)
