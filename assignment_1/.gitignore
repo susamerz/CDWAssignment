@@ -4,3 +4,4 @@
 # Test data
 *.gz
 subj1
+*.npz

@@ -23,4 +23,17 @@ class BrainData:
         labels = pd.read_csv(dpath / 'labels.txt', sep=' ')
         return cls(data=bold.get_fdata(),
                    chunks=np.array(labels.chunks),
-                   labels=np.array(labels.labels))
+                   labels=np.array(labels.labels, dtype=str))
+
+    @classmethod
+    def from_npz_file(cls, fpath):
+        npz = np.load(fpath)
+        return cls(data=npz['data'],
+                   chunks=npz['chunks'],
+                   labels=npz['labels'])
+
+    def write(self, fpath):
+        np.savez(fpath,
+                 data=self.data,
+                 chunks=self.chunks,
+                 labels=self.labels)

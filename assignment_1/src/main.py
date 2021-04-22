@@ -19,12 +19,8 @@ def preprocess_data(bd):
 
 if __name__ == '__main__':
     from utils import BrainData
-    from matplotlib import pyplot as plt
 
     bd = BrainData.from_directory('subj1')
-
     data = preprocess_data(bd)
-    fig, axs = plt.subplots(1, 2)
-    axs[0].plot(bd.data[20, 30, 30])
-    axs[1].plot(data[20, 30, 30])
-    plt.show()
+    bd.data = data
+    bd.write('preprocessed.npz')
