@@ -12,6 +12,7 @@ class BrainData:
     file like `subj1-2010.01.14.tar.gz`.
     """
     def __init__(self, data, chunks, labels):
+        assert data.shape[-1] == len(chunks) == len(labels)
         self.data = data
         self.chunks = chunks
         self.labels = labels
