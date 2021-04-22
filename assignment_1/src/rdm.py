@@ -21,19 +21,34 @@ def build_rdm(bd):
     return label_t, corr_tt
 
 
+def build_model_rdm(bd):
+    labels = bd.labels
+
+    # Sort according to labels
+    s_t = np.argsort(labels)
+    label_t = labels[s_t]
+
+    data_gt = label_t[np.newaxis]
+    corr = pdist(data_gt.T, metric=lambda u, v: u != v)
+    corr_tt = squareform(corr)
+    return label_t, corr_tt
+
+
 if __name__ == '__main__':
     from utils import BrainData
 
     bd = BrainData.from_npz_file('preprocessed.npz')
-    label_t, corr_tt = build_rdm(bd)
+    labels, rdm = build_rdm(bd)
+    labels, model_rdm = build_model_rdm(bd)
 
     from matplotlib import pyplot as plt
 
-    fig, ax = plt.subplots()
-    plt.imshow(corr_tt)
-    plt.colorbar()
-    ulabels, uindices = np.unique(label_t, return_index=True)
-    plt.xticks(uindices, ulabels, rotation='vertical')
-    plt.yticks(uindices, ulabels)
-    plt.tight_layout()
+    for matrix in [rdm, model_rdm]:
+        fig, ax = plt.subplots()
+        plt.imshow(matrix)
+        plt.colorbar()
+        ulabels, uindices = np.unique(labels, return_index=True)
+        plt.xticks(uindices, ulabels, rotation='vertical')
+        plt.yticks(uindices, ulabels)
+        plt.tight_layout()
     plt.show()
