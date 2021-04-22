@@ -10,5 +10,5 @@ tar xvf subj1-2010.01.14.tar.gz
 ## Run the scripts
 
 ```
-python src/main.py
+python src/preprocess.py
 ```
