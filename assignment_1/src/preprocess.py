@@ -4,6 +4,20 @@ from scipy.stats import zscore
 
 
 def preprocess_data(bd, zero_nan=False):
+    """Preprocess brain data.
+
+    Parameters
+    ----------
+    bd:
+        BrainData object
+    zero_nan:
+        If true, replace NaNs in output with zeros
+
+    Returns
+    -------
+    processed_data:
+       Processed data part of the BrainData object
+    """
     data = bd.data
     processed_data = np.empty_like(data)
     chunks = bd.chunks

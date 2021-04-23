@@ -4,6 +4,18 @@ from scipy.stats import spearmanr
 
 
 def build_rdm(data):
+    """Build a representational dissimilarity matrix (RDM).
+
+    Parameters
+    ----------
+    data:
+        Data with the last dimension corresponding to labels
+
+    Returns
+    -------
+    rdm:
+       2D array of shape nxn, where n is the number of labels
+    """
     data_gt = data.reshape(-1, data.shape[-1])
     corr = pdist(data_gt.T, metric='correlation')
     corr_tt = squareform(corr)
@@ -11,6 +23,19 @@ def build_rdm(data):
 
 
 def build_model_rdm(labels):
+    """Build a model RDM.
+
+    Parameters
+    ----------
+    labels:
+        Labels of data
+
+    Returns
+    -------
+    rdm:
+       2D array of shape nxn, where n is the number of labels
+       (including all duplicates)
+    """
     data_gt = labels[np.newaxis]
     corr = pdist(data_gt.T, metric=lambda u, v: u != v)
     corr_tt = squareform(corr)
@@ -18,6 +43,20 @@ def build_model_rdm(labels):
 
 
 def calculate_rsa_score(rdm1, rdm2):
+    """Calculate a representational similarity analysis (RSA) score.
+
+    Parameters
+    ----------
+    rdm1:
+        RDM
+    rdm2:
+        RDM
+
+    Returns
+    -------
+    score:
+       RSA score
+    """
     corr, _ = spearmanr(rdm1.flatten(), rdm2.flatten())
     return corr
 

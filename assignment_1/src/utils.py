@@ -24,6 +24,17 @@ class BrainData:
     def from_directory(cls, dpath, *,
                        apply_mask=True,
                        exclude_labels=['rest', 'scrambledpix']):
+        """Initialize object from directory.
+
+        Parameters
+        ----------
+        dpath:
+            Path to the directory
+        apply_mask:
+            If true, discard all data outside the mask
+        exclude_labels:
+            Discard data corresponding to these labels
+        """
         dpath = Path(dpath)
         bold = nib.load(dpath / 'bold.nii.gz')
         affine = bold.affine
@@ -48,6 +59,13 @@ class BrainData:
 
     @classmethod
     def from_npz_file(cls, fpath):
+        """Initialize object from npz file.
+
+        Parameters
+        ----------
+        fpath:
+            Path to the file created with `write()`
+        """
         npz = np.load(fpath)
         return cls(data=npz['data'],
                    chunks=npz['chunks'],
@@ -57,6 +75,13 @@ class BrainData:
                    )
 
     def write(self, fpath):
+        """Write object to a npz file.
+
+        Parameters
+        ----------
+        fpath:
+            Path to the file to be written
+        """
         np.savez(fpath,
                  data=self.data,
                  chunks=self.chunks,
@@ -66,13 +91,24 @@ class BrainData:
                  )
 
     def sort_by_labels(self):
-        """Sort data by its labels."""
+        """Sort data by its labels.
+
+        This changes the state of the object.
+        """
         s_t = np.argsort(self.labels)
         self.data = self.data[..., s_t]
         self.chunks = self.chunks[s_t]
         self.labels = self.labels[s_t]
 
     def plot_brain(self, index=0):
+        """Plot the object's data.
+
+        Parameters
+        ----------
+        index:
+            The time-series index of the volumetric data
+        """
+        assert self.data.ndim == 4
         from nilearn import plotting
         image = nib.Nifti1Image(self.data[..., index], self.affine)
         plotting.plot_glass_brain(image)
