@@ -90,7 +90,7 @@ Specifically, we will make RDMs using small spherical subsets ("searchlights") c
 
 We pick a voxel and create a searchlight around it using a radius of 2 voxels (hence a diameter of 5 voxels: the center voxel and 2 voxels in each direction).
 The radius should be a parameter that you can easily change.
-Then we use only the selected voxels to compute an RDM (27 voxels when the radius is 2).
+Then we use only the selected voxels to compute an RDM (33 voxels when the radius is 2).
 This RDM is then compared to the model RDM and the resulting RSA score is assigned to the voxel at the center of the searchlight.
 By repeating this procedure for every voxel in the images, we can create a complete map of RSA values, which would look something like this:
 
