@@ -33,7 +33,7 @@ class BrainData:
 
         # Filter labels
         flt = [label not in exclude_labels for label in labels]
-        data = data[:, flt]
+        data = data[..., flt]
         chunks = chunks[flt]
         labels = labels[flt]
 
