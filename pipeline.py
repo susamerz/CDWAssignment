@@ -8,6 +8,7 @@ import nibabel as nib
 import numpy as np
 import pandas as pd
 import scipy
+from scipy.spatial.distance import pdist, squareform
 from progress.bar import Bar
 from nilearn import plotting
 
@@ -139,9 +140,9 @@ def remove_rest(data, labels):
 def create_model_RDM(labels):
     model_RDM = np.zeros((len(labels.index), len(labels.index)))
 
-    for i in range(len(labels_sorted.labels)):
-        for j in range(len(labels_sorted.labels)):
-            model_RDM[i, j] = (labels_sorted.labels.iloc[i] == labels_sorted.labels.iloc[j])
+    for i in range(len(labels.labels)):
+        for j in range(len(labels.labels)):
+            model_RDM[i, j] = (labels.labels.iloc[i] == labels.labels.iloc[j])
 
     return model_RDM
 
@@ -155,23 +156,10 @@ def flatten_voxels(data, locations, image):
 
 
 def create_bold_RDM(data, location, ROI_searchlights):
-    n_images = len(data[0, 0, 0, :])
-    RDM = np.zeros((n_images, n_images))
+
     search_locs = ROI_searchlights[location]
-
-    progress_bar = Bar('Single RDM progress', max=n_images)
-    for i in range(n_images):
-        for j in range(n_images):
-            image_1 = []
-            image_2 = []
-
-            image_1 = np.concatenate((image_1, flatten_voxels(data, search_locs, i)))
-            image_2 = np.concatenate((image_2, flatten_voxels(data, search_locs, j)))
-
-            RDM[i, j] = 1 - scipy.stats.pearsonr(image_1, image_2)[0]  # dissimilarity betw. 1 & 2
-        progress_bar.next()
-
-    progress_bar.finish()
+    search_locs_data = np.array([data[loc[0], loc[1], loc[2], :].flatten() for loc in search_locs]).T
+    RDM = squareform(pdist(search_locs_data, metric='correlation'))
 
     return RDM
 
@@ -210,10 +198,6 @@ voxel_index_grid = list(np.ndindex(voxel_shape))
 # Create list of ROI voxel locations:
 ROI_locs = list(map(tuple, np.argwhere(mask_data == 1)))
 
-# Use only 2 in testing:
-# TODO: remove this when testing done.
-ROI_locs = ROI_locs[0:2]
-
 # Create searchlight areas for each ROI location
 print("Creating searchlights")
 ROI_searchlights = searchlight(ROI_locs, radius, voxel_index_grid)
@@ -229,3 +213,4 @@ for loc in ROI_locs:
 
 ROI_RDM_progress_bar.finish()
 
+# TODO: Check that RDMs are OK! (plot something)
