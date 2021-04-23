@@ -10,7 +10,7 @@ from rdm import build_rdm, build_model_rdm, calculate_rsa_score
 def main(data_dpath, tmp_fpath, radius):
     if not tmp_fpath.exists():
         print(f'Preprocessing data from {data_dpath}')
-        bd = BrainData.from_directory(data_dpath, mask=False)
+        bd = BrainData.from_directory(data_dpath, apply_mask=False)
         data = preprocess_data(bd)
         bd.data = data
         print(f'Writing data to {tmp_fpath}')
