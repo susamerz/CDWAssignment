@@ -44,7 +44,7 @@ def main(data_dpath, tmp_fpath, rsa_fpath, radius):
         sl_data_gt = data_gt[tuple(indices_iv.T)]
         rdm = build_rdm(sl_data_gt)
         rsa = calculate_rsa_score(rdm, model_rdm)
-        rsa_data_g[origin_v] = rsa
+        rsa_data_g[tuple(origin_v)] = rsa
 
         print(f'\r{(i + 1) / Ni * 100:.2f}% done', end='')
 
