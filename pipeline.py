@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import scipy
 from scipy.spatial.distance import pdist, squareform
+from scipy.stats import spearmanr
 from progress.bar import Bar
 from nilearn import plotting
 
@@ -138,22 +139,10 @@ def remove_rest(data, labels):
     return clean_data, clean_labels
 
 def create_model_RDM(labels):
-    model_RDM = np.zeros((len(labels.index), len(labels.index)))
 
-    for i in range(len(labels.labels)):
-        for j in range(len(labels.labels)):
-            model_RDM[i, j] = (labels.labels.iloc[i] == labels.labels.iloc[j])
+    model_RDM = squareform([int(labels.labels[i]!=labels.labels[j]) for i in range(len(labels.labels)) for j in range(i+1, len(labels.labels))])
 
     return model_RDM
-
-
-def flatten_voxels(data, locations, image):
-    flat = np.array([])
-    for loc in locations:
-        flat = np.append(flat, data[loc[0], loc[1], loc[2], image])
-
-    return flat
-
 
 def create_bold_RDM(data, location, ROI_searchlights):
 
@@ -182,18 +171,24 @@ preprocessed_image = nib.Nifti1Image(processed_bold_data, bold.affine)
 
 # Remove 'rest' images from data
 # TODO: find correct place to apply this
-#pic_voxels, pic_labels = remove_rest(processed_bold_data, labels)
+pic_voxels, pic_labels = remove_rest(processed_bold_data, labels)
+pic_labels.reset_index(drop=True, inplace=True) # makes index match row numbering in pic_voxels
 
 # Sort everything according to labels
 print("Sorting...")
-labels_sorted = labels.sort_values('labels')
-voxels_sorted = processed_bold_data[:, :, :, labels.index]
+labels_sorted = pic_labels.sort_values('labels')
+voxels_sorted = pic_voxels[:, :, :, pic_labels.index]
 
 # create voxel index
 print("Creating voxel index...")
 data_shape = voxels_sorted.shape
 voxel_shape = data_shape[0:3]
 voxel_index_grid = list(np.ndindex(voxel_shape))
+
+
+# Create Model RDM
+print("Creating model RDM")
+model_RDM = create_model_RDM(labels_sorted)
 
 # Create list of ROI voxel locations:
 ROI_locs = list(map(tuple, np.argwhere(mask_data == 1)))
@@ -202,15 +197,32 @@ ROI_locs = list(map(tuple, np.argwhere(mask_data == 1)))
 print("Creating searchlights")
 ROI_searchlights = searchlight(ROI_locs, radius, voxel_index_grid)
 
+
 # create BOLD RDMs for all center voxels:
 ROI_RDMs = {}
+ROI_RSAs  ={}
 ROI_RDM_progress_bar = Bar('Computing RDMs for ROIs', max=len(ROI_locs))
 
 for loc in ROI_locs:
 
-    ROI_RDMs[loc] = create_bold_RDM(data, loc, ROI_searchlights)
+    ROI_RDMs[loc] = create_bold_RDM(voxels_sorted, loc, ROI_searchlights)
+    ROI_RSAs[loc], RSAp = spearmanr(ROI_RDMs[loc].flatten(), model_RDM.flatten())
     ROI_RDM_progress_bar.next()
 
 ROI_RDM_progress_bar.finish()
 
-# TODO: Check that RDMs are OK! (plot something)
+print(ROI_RSAs)
+print(ROI_RSAs[ROI_locs[0]])
+print(type(ROI_RSAs[ROI_locs[0]]))
+
+
+# create an RSA image:
+print("Creating a Nifti1Image")
+plot_data = np.zeros(data.shape[0:3])
+for ROI_loc in ROI_RSAs:
+    plot_data[ROI_loc] = ROI_RSAs[ROI_loc]
+
+print("Plotting RSA figures")
+img = nib.Nifti1Image(plot_data, bold.affine)
+#plotting.plot_glass_brain(img, output_file="RSA_plot.png")
+plotting.plot_glass_brain(img, output_file="RSA_plot_glass_brain.png")
