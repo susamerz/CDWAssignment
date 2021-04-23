@@ -71,3 +71,8 @@ class BrainData:
         self.data = self.data[..., s_t]
         self.chunks = self.chunks[s_t]
         self.labels = self.labels[s_t]
+
+    def plot_brain(self, index=0):
+        from nilearn import plotting
+        image = nib.Nifti1Image(self.data[..., index], self.affine)
+        plotting.plot_glass_brain(image)
