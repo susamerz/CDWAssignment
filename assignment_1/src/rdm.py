@@ -3,17 +3,15 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.stats import spearmanr
 
 
-def build_rdm(bd):
-    data = bd.data
+def build_rdm(data):
     data_gt = data.reshape(-1, data.shape[-1])
     corr = pdist(data_gt.T, metric='correlation')
     corr_tt = squareform(corr)
     return corr_tt
 
 
-def build_model_rdm(bd):
-    label_t = bd.labels
-    data_gt = label_t[np.newaxis]
+def build_model_rdm(labels):
+    data_gt = labels[np.newaxis]
     corr = pdist(data_gt.T, metric=lambda u, v: u != v)
     corr_tt = squareform(corr)
     return corr_tt
@@ -29,8 +27,8 @@ if __name__ == '__main__':
 
     bd = BrainData.from_npz_file('preprocessed.npz')
     bd.sort_by_labels()
-    rdm = build_rdm(bd)
-    model_rdm = build_model_rdm(bd)
+    rdm = build_rdm(bd.data)
+    model_rdm = build_model_rdm(bd.labels)
 
     print(f'rdm vs rdm: {calculate_rsa_score(rdm, rdm)}')
     print(f'rdm vs model: {calculate_rsa_score(rdm, model_rdm)}')
