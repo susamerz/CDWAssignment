@@ -105,13 +105,6 @@ def searchlight(center_voxels, radius, search_grid):
     return search_results
 
 
-def build_model_RDM(labels):
-
-    model_RDM = np.zeros((len(labels.index), len(labels.index)))
-    labels_sorted = labels.sort_values('labels')
-
-
-
 def remove_rest(data, labels):
     """Removes 'rest' labeled data.
 
