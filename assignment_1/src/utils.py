@@ -11,13 +11,14 @@ class BrainData:
     This class encapsulates the relevant contents of
     file like `subj1-2010.01.14.tar.gz`.
     """
-    def __init__(self, data, chunks, labels, mask):
+    def __init__(self, data, chunks, labels, mask, affine):
         assert data.shape[-1] == len(chunks) == len(labels)
         assert data.shape[:-1] == mask.shape
         self.data = data
         self.chunks = chunks
         self.labels = labels
         self.mask = mask
+        self.affine = affine
 
     @classmethod
     def from_directory(cls, dpath, *,
@@ -25,6 +26,7 @@ class BrainData:
                        exclude_labels=['rest', 'scrambledpix']):
         dpath = Path(dpath)
         bold = nib.load(dpath / 'bold.nii.gz')
+        affine = bold.affine
         data = bold.get_fdata()
         mask = nib.load(dpath / 'mask4_vt.nii.gz').get_fdata()
         mask = np.array(mask, dtype=bool)
@@ -41,7 +43,8 @@ class BrainData:
         chunks = chunks[flt]
         labels = labels[flt]
 
-        return cls(data=data, chunks=chunks, labels=labels, mask=mask)
+        return cls(data=data, chunks=chunks, labels=labels,
+                   mask=mask, affine=affine)
 
     @classmethod
     def from_npz_file(cls, fpath):
@@ -50,6 +53,7 @@ class BrainData:
                    chunks=npz['chunks'],
                    labels=npz['labels'],
                    mask=npz['mask'],
+                   affine=npz['affine'],
                    )
 
     def write(self, fpath):
@@ -58,6 +62,7 @@ class BrainData:
                  chunks=self.chunks,
                  labels=self.labels,
                  mask=self.mask,
+                 affine=self.affine,
                  )
 
     def sort_by_labels(self):

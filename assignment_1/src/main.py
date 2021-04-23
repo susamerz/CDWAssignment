@@ -51,7 +51,8 @@ def main(data_dpath, tmp_fpath, rsa_fpath, radius):
     print()
     print(f'Writing RSA data to {rsa_fpath}')
     rsa_bd = BrainData(data=rsa_data_g[..., np.newaxis], mask=bd.mask,
-                       labels=np.array(['']), chunks=np.array([0]))
+                       labels=np.array(['']), chunks=np.array([0]),
+                       affine=bd.affine)
     rsa_bd.write(rsa_fpath)
 
 
