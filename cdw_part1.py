@@ -38,9 +38,9 @@ def main():
     #voxels_in_roi = bold.get_fdata()[mask.get_fdata() == 1, :] # 577 voxels
            
     labels = pd.read_csv('../CDWAssignment_data/subj1/labels.txt', sep=' ')
-    '''
+    
     # make 5-dimensional numpy array for chunk data
-    # size 40x64x64x[time_length_of_chunk]x11
+    # size 12x40x64x64x[time_length_of_chunk=121]
     chunks = [];
     
     for i in range(12):
@@ -49,6 +49,7 @@ def main():
         chunks.append(bold_chunk)
         
     chunks_np = np.array(chunks)
+    #print(chunks_np.shape) = (12, 40, 64, 64, 121)
     
     # pre-process all chunks
     chunks_np_pp = preprocess(chunks_np)
@@ -60,12 +61,15 @@ def main():
     index_names = labels[(labels['labels'] == 'rest') | (labels['labels'] == 'scrambledpix')].index
     labels.drop(index_names, inplace = True)
     
+    # also drop MR images corresponding to the dropped labels
+    # TODO
+    
     # get amount of leftover labels
     unique_labels = labels['labels'].unique()
     no_of_labels = len(unique_labels)
     
     # construct model RDM: square matrix with diagonal of zeros and ones elsewhere    
-    n_images = chunks_np_pp.shape[3]
+    n_images = chunks_np_pp.shape[4]
     mRDM = np.zeros((n_images, n_images))
     
     for i in range(mRDM.shape[0]):
@@ -80,10 +84,10 @@ def main():
         
     # -------------Make searchlights around each voxel------
     # --> loop through voxels in ROI and make searchlight centering on each
-    '''
+    
     bold_array = bold.get_fdata()
     mask_array = mask.get_fdata()
-voxel_grid = np.array(list(np.ndindex(bold_array.shape[:3])))
+    voxel_grid = np.array(list(np.ndindex(bold_array.shape[:3])))
     
     RSA = np.zeros(((bold_array.shape[0], bold_array.shape[1], bold_array.shape[2])))
     
@@ -94,14 +98,13 @@ voxel_grid = np.array(list(np.ndindex(bold_array.shape[:3])))
         
         if mask_array[x_dim,y_dim,z_dim] == 1:
             print('Voxel in ROI: computing searchlight \n')
-            print('WOOP WOOP \n')
             
             centerpoint = [[x_dim,y_dim,z_dim]]
             
             distances = distance.cdist(centerpoint, voxel_grid, 'euclidean')   
             searchlight = bold_array[bold_array[distances <= radius]]
 
-            '''
+            
             # compute RDM and flatten into vector
             RDM = distance.pdist(searchlight, 'correlation')
             RDM = distance.squareform(RDM)
@@ -112,7 +115,7 @@ voxel_grid = np.array(list(np.ndindex(bold_array.shape[:3])))
             
             # save RSA value
             RSA[x_dim,y_dim,z_dim] = RSA_value;
-            '''
+            
         else:
             print('Voxel not in ROI \n')      
 
