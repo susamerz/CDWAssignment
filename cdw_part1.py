@@ -5,6 +5,8 @@ import scipy as sc
 from scipy import signal
 import nibabel as nib
 import nilearn as nil
+from scipy.spatial import distance
+from scipy.stats import spearmanr
 
 def preprocess(chunks):
     i = 0
