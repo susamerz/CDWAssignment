@@ -63,14 +63,15 @@ def main():
     no_of_labels = len(unique_labels)
     
     # construct model RDM: square matrix with diagonal of zeros and ones elsewhere    
-    mRDM = np.zeros((no_of_labels, no_of_labels))
+    n_images = chunks_np_pp.shape[3]
+    mRDM = np.zeros((n_images, n_images))
     
     for i in range(mRDM.shape[0]):
         for j in range(mRDM.shape[1]):
-            if i==j:
-                mRDM[i,j] = 0
+            if labels['labels'].values[i] == labels['labels'].values[j]:
+                mRDM[i, j] = 0
             else:
-                mRDM[i,j] = 1
+                mRDM[i, j] = 1
     
     # flatten model RDM into vector
     mRDMvec = mRDM.flatten            
