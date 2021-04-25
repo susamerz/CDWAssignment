@@ -74,7 +74,7 @@ def main():
                 mRDM[i, j] = 1
     
     # flatten model RDM into vector
-    mRDMvec = mRDM.flatten            
+    mRDMvec = mRDM.flatten()
         
     # -------------Make searchlights around each voxel------
     # --> loop through voxels in ROI and make searchlight centering on each
