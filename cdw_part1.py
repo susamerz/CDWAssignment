@@ -101,7 +101,7 @@ def main():
             
             centerpoint = [[x_dim,y_dim,z_dim]]
             
-            distances = sc.spatial.distance.cdist(centerpoint, voxel_grid, 'euclidean')   
+            distances = distance.cdist(centerpoint, voxel_grid, 'euclidean')   
             searchlight = bold_array[bold_array[distances <= radius]]
 
             '''
