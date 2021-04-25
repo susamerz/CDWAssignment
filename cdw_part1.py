@@ -35,12 +35,10 @@ def main():
     bold = nib.load('../CDWAssignment_data/subj1/bold.nii.gz')
     
     mask = nib.load('../CDWAssignment_data/subj1/mask4_vt.nii.gz')
-    #voxels_in_roi = bold.get_fdata()[mask.get_fdata() == 1, :] # 577 voxels
-           
+        
     labels = pd.read_csv('../CDWAssignment_data/subj1/labels.txt', sep=' ')
     
     # make 5-dimensional numpy array for chunk data
-    # size 12x40x64x64x[time_length_of_chunk=121]
     chunks = [];
     
     for i in range(12):
@@ -49,7 +47,7 @@ def main():
         chunks.append(bold_chunk)
         
     chunks_np = np.array(chunks)
-    #print(chunks_np.shape) = (12, 40, 64, 64, 121)
+    # shape of chunks is (12, 40, 64, 64, 121)
     
     # pre-process all chunks
     chunks_np_pp = preprocess(chunks_np)
@@ -91,7 +89,7 @@ def main():
     
     RSA = np.zeros(((bold_array.shape[0], bold_array.shape[1], bold_array.shape[2])))
     
-    radius = 2
+    radius = 2 # for searchlight
     
     for x_dim,y_dim,z_dim in np.ndindex(bold_array.shape[:3]):
         # now we have one voxel timeseries 
@@ -103,7 +101,8 @@ def main():
             
             distances = distance.cdist(centerpoint, voxel_grid, 'euclidean')   
             searchlight = bold_array[bold_array[distances <= radius]]
-
+            
+            # TODO: get single BOLD images for RDM calculation
             
             # compute RDM and flatten into vector
             RDM = distance.pdist(searchlight, 'correlation')
@@ -119,10 +118,6 @@ def main():
         else:
             print('Voxel not in ROI \n')      
 
-
-    # Sort images by object category
-    #labels_sorted = labels.sort_values('labels')
-    #bold_sorted = bold.get_fdata()[:, :, :, labels_sorted.index]
     
     # ------------------Make image of RSA values in ROI-----------
     
