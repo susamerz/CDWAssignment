@@ -106,7 +106,7 @@ def main():
             # compute RDM and flatten into vector
             RDM = sc.spatial.distance.pdist(searchlight, 'correlation')
             RDM = sc.spatial.distance.squareform(RDM)
-            RDMvec = flatten(RDM)
+            RDMvec = RDM.flatten()
             
             # compute RSA
             RSA_value, p_value = spearmanr(mRDMvec, RDMvec)
