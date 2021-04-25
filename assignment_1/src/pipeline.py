@@ -36,6 +36,15 @@ def get_model_rdm(labels):
     return squareform(sim)
 
 
+def plot_result(voxel_rse, bold, mask_data):
+    """Plot pipeline result.
+    """
+    result = np.zeros(bold.get_fdata().shape[:3])
+    result[mask_data == 1] = voxel_rse
+    result = nib.Nifti1Image(result, bold.affine)
+    plotting.plot_glass_brain(result)
+
+
 bold_path = "subj1/bold.nii.gz"
 mask_path = "subj1/mask4_vt.nii.gz"
 
@@ -69,3 +78,5 @@ for i in tqdm(list(range(searchlight_grid.shape[0]))):
 
 print(
     f"Finished. {voxel_rse.shape}, Mean, std: {voxel_rse.mean(), voxel_rse.std()}")
+
+plot_result(voxel_rse, bold, mask_data)
