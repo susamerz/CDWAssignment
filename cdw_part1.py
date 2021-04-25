@@ -109,7 +109,7 @@ def main():
             RDMvec = flatten(RDM)
             
             # compute RSA
-            RSA_value = spearman_correlation(mRDMvec, RDMvec)
+            RSA_value, p_value = spearmanr(mRDMvec, RDMvec)
             
             # save RSA value
             RSA[x_dim,y_dim,z_dim] = RSA_value;
