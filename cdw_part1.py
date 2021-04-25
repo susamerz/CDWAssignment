@@ -83,10 +83,7 @@ def main():
     '''
     bold_array = bold.get_fdata()
     mask_array = mask.get_fdata()
-    voxel_grid = np.zeros(((bold_array.shape[0], bold_array.shape[1], bold_array.shape[2])))
-    
-    for i,j,k in np.ndindex(bold_array.shape[:3]):
-        voxel_grid[i,j,k] = [[i,j,k]]
+voxel_grid = np.array(list(np.ndindex(bold_array.shape[:3])))
     
     RSA = np.zeros(((bold_array.shape[0], bold_array.shape[1], bold_array.shape[2])))
     
