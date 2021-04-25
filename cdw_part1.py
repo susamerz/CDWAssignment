@@ -41,7 +41,7 @@ def main():
     # size 40x64x64x[time_length_of_chunk]x11
     chunks = [];
     
-    for i in range(11):
+    for i in range(12):
         labels_chunk = labels.query('chunks == %d' % (i))
         bold_chunk = bold.get_fdata()[:, :, :, labels_chunk.index]
         chunks.append(bold_chunk)
