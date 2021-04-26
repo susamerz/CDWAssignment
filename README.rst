@@ -69,7 +69,7 @@ Find the instructions for the assignment here:
 
 1. `Overview of the pipeline <overview.rst>`_
 2. `The assignment, part 1: implementation instructions <implementation_part1.rst>`_
-3. `The assignment, part 2: instructions <implementation_part2.rst>.`_ 
+3. `The assignment, part 2: instructions <implementation_part2.rst>`_ 
 
 Lecture slides
 ==============
