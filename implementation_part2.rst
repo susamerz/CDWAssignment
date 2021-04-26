@@ -19,5 +19,9 @@ When computing the grand average RSA value for a voxel, treat any subject for wh
 
 Try to make your design such that it is still possible to perform the analysis on a single subject (the part 1 analysis).
 
-Office hour: in case you have any questions, or are stuck, Wednesday and Thursday at 14:00 in the workshops Zoom 
+The grand average result should look like this:
 
+.. image:: images/rsa_grand_average.png
+    :alt: Grand average RSA results
+
+Office hour: in case you have any questions, or are stuck, Wednesday and Thursday at 14:00 in the workshops Zoom 
