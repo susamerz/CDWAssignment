@@ -209,27 +209,20 @@ chunks = labeled_df.reset_index()\
 # User inputs:
 x = 20
 y = 30
-z = 10
+z = 30
 r = 10
 
-images = [400,600]
+images = [400,600,800]
 
 
 selection = create_selection(x=x,y=y,z=z)
-mask_cube = bold_mask(bold = bold.get_fdata(), voxel=selection, r=5)
-bold_array = bold.get_fdata()
+mask_cube = bold_mask(bold = bold.get_fdata(), voxel=selection, r=r)
+bold_array = bold.get_fdata().copy()
 bold_array[~mask_cube] = 0
 
 for chunk in range(len(chunks)):
     bold_array[:,:,:,chunks.loc[chunk,'index']] = \
         standardize_data(bold_array[:,:,:,chunks.loc[chunk,'index']])
-
-        
-# %%
-
-
-
-
 
 # RDM analysis process
 
@@ -258,7 +251,7 @@ plt.colorbar(im2,cax=cax)
 cax2 = plt.axes([0.45, 0.12, 0.03, 0.78])
 plt.colorbar(im1,cax=cax2)
 
-fig, ax = plt.subplots(nrows = 2, figsize=(11,10))
+fig, ax = plt.subplots(nrows = len(images), figsize=(11,10))
 
 for i,image_index in enumerate(images):
     plot_MRI(image= bold_array[:,:,:,image_index], bold = bold, mask = mask_cube,
