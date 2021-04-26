@@ -18,5 +18,5 @@ Perform the group level analysis on all voxels that are part of all at least one
 When computing the grand average RSA value for a voxel, treat any subject for which the voxel is not part of their ROI as having an RSA value of zero for this voxel.
 
 
-Office hour, in case you have any questions, or are stuck, Wednesday and Thursday at 14:00 
+Office hour, in case you have any questions, or are stuck, Wednesday and Thursday at 14:00 in the Workshops Zoom 
 
