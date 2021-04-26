@@ -47,8 +47,7 @@ Timetable for the workshop::
 
 Workshop Organizers
 ===================
-This workshop is brought to you by `Susanne Merz <https://people.aalto.fi/susanne.merz>`_ and `Marijn van Vliet <https://people.aalto.fi/marijn.vanvliet>`_, members of the department of Neuroscience and Biomedical Engineering (NBE) of Aalto University.
-
+This workshop is brought to you by `Susanne Merz <https://people.aalto.fi/susanne.merz>`_ of the department of Neuroscience and Biomedical Engineering (NBE), and `Marijn van Vliet <https://people.aalto.fi/marijn.vanvliet>`_, research software engineer, both from Aalto University.
 Pre-assignment
 ==============
 For this workshop we assume that you are able to program in Python.
