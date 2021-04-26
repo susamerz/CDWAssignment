@@ -17,6 +17,7 @@ However, since each subject has their own ROI, the ROIs will not match perfectly
 Perform the group level analysis on all voxels that are part of all at least one subject's ROI.
 When computing the grand average RSA value for a voxel, treat any subject for which the voxel is not part of their ROI as having an RSA value of zero for this voxel.
 
+Try to make your design such that it is still possible to perform the analysis on a single subject (the part 1 analysis).
 
-Office hour, in case you have any questions, or are stuck, Wednesday and Thursday at 14:00 in the workshops Zoom 
+Office hour: in case you have any questions, or are stuck, Wednesday and Thursday at 14:00 in the workshops Zoom 
 
