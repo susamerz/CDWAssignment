@@ -154,3 +154,10 @@ An effective strategy for computing a spherical searchlight surrounding a voxel 
 
 .. image:: images/searchlight_creation.png
     :alt: Grid of points corresponding to the voxels
+
+
+Computing an RDM
+----------------
+You don't need a slow double ``for``-loop to implement building an RDM.
+Take a look at SciPy's `pdist <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html>`_ function that has a ``method='correlation'`` parameter. Since an RDM is always symmetric, this function only computes the upper triangle of the RDM matrix. To convert this to a regular square matrix, use `squareform <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.squareform.html>`_.
+

@@ -47,7 +47,7 @@ Timetable for the workshop::
 
 Workshop Organizers
 ===================
-This workshop is brought to you by `Susanne Merz <https://people.aalto.fi/susanne.merz>`_ and `Marijn van Vliet <https://people.aalto.fi/marijn.vanvliet>`_, members of the department of Neuroscience and Biomedical Engineering (NBE) of Aalto University.
+This workshop is brought to you by `Susanne Merz <https://people.aalto.fi/susanne.merz>`_ of the department of Neuroscience and Biomedical Engineering (NBE), and `Marijn van Vliet <https://people.aalto.fi/marijn.vanvliet>`_, research software engineer, both from Aalto University.
 
 Pre-assignment
 ==============
@@ -69,7 +69,7 @@ Find the instructions for the assignment here:
 
 1. `Overview of the pipeline <overview.rst>`_
 2. `The assignment, part 1: implementation instructions <implementation_part1.rst>`_
-3. The assignment, part 2: will be revealed after part 1 is completed.
+3. `The assignment, part 2: instructions <implementation_part2.rst>`_ 
 
 Lecture slides
 ==============
