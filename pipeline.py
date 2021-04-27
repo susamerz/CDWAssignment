@@ -7,146 +7,12 @@ STATUS: Currently DRAFT for analysing a single subject.
 import nibabel as nib
 import numpy as np
 import pandas as pd
-import scipy
-from scipy.spatial.distance import pdist, squareform
-from scipy.stats import spearmanr
-from progress.bar import Bar
 from nilearn import plotting
-
-
-
-def preprocess_chunk(chunk_data):
-    """This function preprocesses a chunk of data by first removing linear trend and the
-    z-scoring the data. Operations are performed on the last axis in data.
-
-    Parameters
-    ----------
-    chunk_data : array-like
-        NOTE: operations will be performed on the last axis.
-
-    Returns
-    -------
-    array-like
-        A preprocessed version of chunk data in same shape and format"""
-
-    detrended = scipy.signal.detrend(chunk_data)
-    z_scored = scipy.stats.zscore(detrended, axis=-1)
-
-    return z_scored
-
-def preprocess_voxel_data(bold_data, labels):
-    """Wrapper for handling preprocessing for a whole dataset comprised of chunks.
-
-    Parameters
-    ----------
-    bold_data : array-like
-        (NumPy) array containing neural image data
-
-    labels : Pandas dataframe
-        Should contain at least columns 'chunks' that matches in length to bold_data. This chunk information
-        is used to split bold_data into chunks, each pre-processed separately.
-
-    Returns
-    -------
-    array-like
-        A chunk-wise preprocessed version of bold_data in same shape and format
-    """
-
-
-    processed_bold_np = np.zeros(bold_data.shape)
-    chunks = np.unique(labels.chunks)
-
-    chunk_bar = Bar('Preprosessing chunks', max=len(chunks))
-    for chunk in chunks:
-        labels_chunk = labels.query(f'chunks == {chunk}')
-        bold_chunk = bold_data[:, :, :, labels_chunk.index]
-        preprocessed_chunk = preprocess_chunk(bold_chunk)
-        processed_bold_np[:, :, :, labels_chunk.index] = preprocessed_chunk
-        chunk_bar.next()
-
-    chunk_bar.finish()
-    return processed_bold_np
-
-def get_bold_in_roi(bold, roi_mask=nib.load('subj1/mask4_vt.nii.gz')):
-
-    return bold.get_fdata()[roi_mask.get_fdata() == 1, :]
-
-# Plot anatomy
-#plotting.plot_anat(anat)
-
-
-def searchlight(center_voxels, radius, search_grid):
-    """This is a searchlight function that returns an array for each center voxel corresponding to
-    all search_grid locations that are within radius (euclidean distance) from the center voxel
-
-    Parameters
-    ----------
-    center_voxels : list
-        a list or array of voxel locations around which seearch is performed
-    radius: float
-        search radius: locations within this radius from each center voxel are included in return
-    search_grid: list
-        all possible locations in 3D coordinates, in list format
-
-    Returns
-    -------
-    dict
-        dictionary of lists, where each key is a center voxel and items are lists of locations inside
-        the search radius from that center voxel in 2D array format: line is a voxel, columns are coordinates.
-
-    """
-    search_results = {}
-    for center_voxel in center_voxels:
-        distances = scipy.spatial.distance.cdist(search_grid, np.array([center_voxel]))
-        found_locations = np.array(search_grid)[distances.flatten() <= radius]
-        search_results[center_voxel] = found_locations
-
-
-    return search_results
-
-
-def remove_rest(data, labels):
-    """Removes 'rest' labeled data.
-
-    Parameters
-    ----------
-    data : array-like
-        data to be cleaned
-
-    labels : Pandas dataframe
-        labels corresponding to last axis in data
-
-    Returns
-    -------
-    array-like
-        data that has been cleaned of data corresponding to 'rest' labels
-
-    Pandas dataframe
-        labels that correspond to returned data
-
-    """
-
-    clean_data = data[:, :, :, labels.query('labels != "rest" ').index]
-    clean_labels = labels[labels.labels != 'rest']
-
-    return clean_data, clean_labels
-
-def create_model_RDM(labels):
-
-    model_RDM = squareform([int(labels.labels[i]!=labels.labels[j]) for i in range(len(labels.labels)) for j in range(i+1, len(labels.labels))])
-
-    return model_RDM
-
-def create_bold_RDM(data, location, ROI_searchlights):
-
-    search_locs = ROI_searchlights[location]
-    search_locs_data = np.array([data[loc[0], loc[1], loc[2], :].flatten() for loc in search_locs]).T
-    RDM = squareform(pdist(search_locs_data, metric='correlation'))
-
-    return RDM
+from tools import *  # make sure namespace doesn't get messed up!
+from matplotlib.pyplot import matshow, savefig
 
 # Input params
-radius = 2 # radius for searchlight
+searchlight_radius = 2
 
 # Load original data
 bold = nib.load('subj1/bold.nii.gz') # loads dataset of BOLD images in Nifti1Image format
@@ -159,15 +25,13 @@ mask_data = mask.get_fdata()
 
 # Preprocessing
 print("Pre-processing...")
-processed_bold_data = preprocess_voxel_data(data, labels)
+chunk_id = labels.chunks.to_numpy()
+processed_bold_data = preprocess_bold_data(data, chunk_id)
 preprocessed_image = nib.Nifti1Image(processed_bold_data, bold.affine)
 
-# Remove 'rest' images from data
-# TODO: find correct place to apply this
-pic_voxels, pic_labels = remove_rest(processed_bold_data, labels)
-pic_labels.reset_index(drop=True, inplace=True) # makes index match row numbering in pic_voxels
+# Remove unwanted images from data
+pic_voxels, pic_labels = remove_rows(processed_bold_data, labels, ['rest', 'scrambled pix'])
 
-# Sort everything according to labels
 print("Sorting...")
 labels_sorted = pic_labels.sort_values('labels')
 voxels_sorted = pic_voxels[:, :, :, pic_labels.index]
@@ -181,32 +45,30 @@ voxel_index_grid = list(np.ndindex(voxel_shape))
 
 # Create Model RDM
 print("Creating model RDM")
-model_RDM = create_model_RDM(labels_sorted)
+model_RDM = create_model_RDM(labels_sorted.labels.to_numpy())
+model_RDM_pic = matshow(model_RDM)
+savefig("model_RDM.png")
 
 # Create list of ROI voxel locations:
 ROI_locs = list(map(tuple, np.argwhere(mask_data == 1)))
 
-# Create searchlight areas for each ROI location
-print("Creating searchlights")
-ROI_searchlights = searchlight(ROI_locs, radius, voxel_index_grid)
-
 
 # create BOLD RDMs for all center voxels:
-ROI_RDMs = {}
 ROI_RSAs  ={}
 ROI_RDM_progress_bar = Bar('Computing RDMs for ROIs', max=len(ROI_locs))
 
 for loc in ROI_locs:
 
-    ROI_RDMs[loc] = create_bold_RDM(voxels_sorted, loc, ROI_searchlights)
-    ROI_RSAs[loc], RSAp = spearmanr(ROI_RDMs[loc].flatten(), model_RDM.flatten())
+    ROI_RDM = create_bold_RDM(voxels_sorted, loc, searchlight_radius, voxel_index_grid)
+    ROI_RSAs[loc], RSAp = spearmanr(ROI_RDM.flatten(), model_RDM.flatten())
+    if np.isnan(ROI_RSAs[loc]):
+        print(ROI_RDM)
+        print("RSA value was nan")
+        raise ValueError
+        break
     ROI_RDM_progress_bar.next()
 
 ROI_RDM_progress_bar.finish()
-
-print(ROI_RSAs)
-print(ROI_RSAs[ROI_locs[0]])
-print(type(ROI_RSAs[ROI_locs[0]]))
 
 
 # create an RSA image:
