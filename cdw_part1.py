@@ -17,9 +17,9 @@ def preprocess(chunk):
     
 def get_one_RSA(subject_no, path, searchlight_radius):
     
-    bold = nib.load('{}subj{}/bold.nii.gz'.format(path, subject_no))    
-    mask = nib.load('{}subj{}/mask4_vt.nii.gz'.format(path, subject_no))  
-    labels_path = '{}subj{}/labels.txt'.format(path, subject_no)      
+    bold = nib.load(f'{path}/subj{subject_no}/bold.nii.gz')    
+    mask = nib.load(f'{path}/subj{subject_no}/mask4_vt.nii.gz')  
+    labels_path = f'{path}/subj{subject_no}/labels.txt'
     labels = pd.read_csv(labels_path, sep=' ')  
     
     bold_data = bold.get_fdata()
