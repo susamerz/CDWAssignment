@@ -86,6 +86,20 @@ def searchlight(center_voxel, radius, search_grid):
     return found_locations
 
 def searchlight_generator(center_voxels, radius, search_grid):
+    """ Creates a generator that yields searchlight locations around center_voxel
+
+    Parameters
+    ----------
+    center_voxels : list
+        center voxels around which searchlight is shone
+
+    radius : int
+        radius of the searchlight: locations that are closer than this radius from
+        each individual center voxel are included in the reeturned locations
+
+    search_grid : list or array
+        A list or array of all possible locations as tuple coordinates"""
+
 
     return (searchlight(center_voxel, radius, search_grid) for center_voxel in center_voxels)
 
@@ -138,6 +152,15 @@ def create_model_RDM(labels):
     return model_RDM
 
 def create_bold_RDM(data, search_locs):
+    """ Creates an RDM matrix from given data for each location listed in search_locs
+
+    Parameters
+    ----------
+    data : numpy array
+        Contains BOLD data in array format
+
+    search_locs : list
+        Contains the locatioins to be used in analysis as tuples (3D)"""
 
     search_locs_data = np.array([data[loc[0], loc[1], loc[2], :].flatten() for loc in search_locs]).T
     RDM = squareform(pdist(search_locs_data, metric='correlation'))  # Pearson distance <=> pairwise correlation
