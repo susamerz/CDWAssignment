@@ -10,16 +10,22 @@ rule download:
     shell: 'wget http://data.pymvpa.org/datasets/haxby2001/{wildcards.subj}-2010.01.14.tar.gz -O - | tar -xzf - -C data/'
 
 rule searchlight_analysis:
-    input: directory('data/{subj}')
+    input:
+        script='src/searchlight_analysis.py',
+        dir=directory('data/{subj}')
     output: 'processed_data/{subj}.npz'
-    shell: 'python src/searchlight_analysis.py {input} {output}'
+    shell: 'python {input.script} {input.dir} {output}'
 
 rule plot:
-    input: 'processed_data/{file}.npz'
+    input:
+        script='src/plot.py',
+        file='processed_data/{file}.npz'
     output: 'plots/{file}.png'
-    shell: 'python src/plot.py {input} {output}'
+    shell: 'python {input.script} {input.file} {output}'
 
 rule calculate_average:
-    input: expand('processed_data/{subj}.npz', subj=SUBJECTS)
+    input:
+        script='src/average.py',
+        files=expand('processed_data/{subj}.npz', subj=SUBJECTS)
     output: 'processed_data/average.npz'
-    shell: 'python src/average.py {input} {output}'
+    shell: 'python {input.script} {input.files} {output}'
