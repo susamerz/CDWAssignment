@@ -4,7 +4,7 @@ Workflow is implemented with snakemake (`python -m pip install snakemake`).
 
 * Run the workflow:
 
-        snakemake -j 1
+        snakemake --cores 1
 
   Average brain is plotted in `plots/average.png`
   and individual brains in `plots/subjX.png`.
