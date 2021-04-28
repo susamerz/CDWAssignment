@@ -1,0 +1,17 @@
+rule all:
+    input:
+        'plots/subj1.png'
+
+rule download:
+    output: directory('data/{subj}')
+    shell: 'wget http://data.pymvpa.org/datasets/haxby2001/{wildcards.subj}-2010.01.14.tar.gz -O - | tar -xzf - -C data/'
+
+rule searchlight_analysis:
+    input: directory('data/{subj}')
+    output: 'processed_data/{subj}.npz'
+    shell: 'python src/searchlight_analysis.py {input} {output}'
+
+rule plot:
+    input: 'processed_data/{subj}.npz'
+    output: 'plots/{subj}.png'
+    shell: 'python src/plot.py {input} {output}'

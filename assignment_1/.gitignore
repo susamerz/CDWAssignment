@@ -1,7 +1,10 @@
 *~
 .*.sw?
 
-# Test data
-*.gz
-subj1
-*.npz
+# Data
+data/
+processed_data/
+plots/
+
+# Snakemake logs
+.snakemake
