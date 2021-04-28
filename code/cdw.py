@@ -6,7 +6,7 @@ Functions for pipeline steps
 
 @author:  jenni.saaristo@helsinki.fi
 @version: 2021-04-28
-@notes:   Redo after feedback, some docstrings missing
+@notes:   Redo after feedback
 """
 
 from scipy import signal, stats
@@ -134,8 +134,24 @@ def reorder_by_labels(bold, labels):
     return (bold_sorted, labels_sorted)
 
 
-def create_modelRDM(labels):
-    # Makes the model RDM, given labels
+def create_model_rdm(labels):
+    """
+    Create RDM from labels
+    
+    Creates a theoretical representational dissimilarity matrix from given
+    labels: dissimilarity within label is 0, between labels 1.
+
+    Parameters
+    ----------
+    labels : DataFrame
+        Labels of frames (sorted).
+
+    Returns
+    -------
+    rdm_model : ndarray
+        Theoretical RDM.
+
+    """
     
     # To get an "identity matrix" over labels we first expand labels to dummies
     # (one column per label with values=[0,1]) and then get the dot product of
@@ -175,16 +191,48 @@ def get_patch_data(bold, mask, rad):
 
 
 def calc_data_rdm(patch_data):
+    """
+    Calculate RDM
     
-    # Calculate dissimilarity of patterns at each frame
+    Returns representational dissimilarity matrix for a patch of data.
+
+    Parameters
+    ----------
+    patch_data : ndarray
+        BOLD data (voxels x frames).
+
+    Returns
+    -------
+    rdm : ndarray
+        Representational dissimilarity matrix (frames x frames).
+
+    """
+    
     rdm = squareform(pdist(patch_data, metric='correlation'))
     
     return rdm
 
 
 def calc_rsa(rdm_bold, rdm_model):
+    """
+    Calculate RSA
     
-    # Calculate RSA score for the two RDMs 
+    Calculates representational similarity score between given RDMs.
+
+    Parameters
+    ----------
+    rdm_bold : ndarray
+        RDM from BOLD data.
+    rdm_model : ndarray
+        RDM defined by model.
+
+    Returns
+    -------
+    rsa_score : float
+        Correlation between the matrices.
+
+    """
+    
     (rsa_score, _) = stats.spearmanr(rdm_bold, rdm_model, axis=None)
     
     return rsa_score
