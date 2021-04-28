@@ -8,66 +8,63 @@ import nilearn as nil
 from scipy.spatial import distance
 from scipy.stats import spearmanr
 
-def preprocess(chunks):
-    i = 0
-    for chunk in chunks:
-        for x_dim in range(chunk.shape[0]):
-            for y_dim in range(chunk.shape[1]):
-                for z_dim in range(chunk.shape[2]):
-                    # now we have one voxel timeseries
-                    # remove linear trend and z-score the data
-                    
-                    voxel_ts = chunk[x_dim, y_dim, z_dim, :]
-                    voxel_ts_detrend = sc.signal.detrend(voxel_ts, axis=-1)
-                    voxel_ts_processed = sc.stats.zscore(voxel_ts_detrend, axis=-1)
-                    
-                    chunk[x_dim, y_dim, z_dim, :] = voxel_ts_processed;
-                    
-        chunks[i] = chunk
-        i += 1
-        
-    return chunks            
+def preprocess(chunk):
+    # Detrends and z-scores one chunk of BOLD MRI data
     
-
+    for x_dim in range(chunk.shape[0]):
+        for y_dim in range(chunk.shape[1]):
+            for z_dim in range(chunk.shape[2]):
+                # now we have one voxel timeseries
+                
+                voxel_ts = chunk[x_dim, y_dim, z_dim, :]
+                chunk[x_dim, y_dim, z_dim, :] = sc.stats.zscore(sc.signal.detrend(voxel_ts), axis=-1)
     
-def main():
+    return chunk            
     
-    bold = nib.load('../CDWAssignment_data/subj1/bold.nii.gz')
+def get_one_RSA(subject_no, path, searchlight_radius):
     
-    mask = nib.load('../CDWAssignment_data/subj1/mask4_vt.nii.gz')
-        
-    labels = pd.read_csv('../CDWAssignment_data/subj1/labels.txt', sep=' ')
+    bold = nib.load('{}subj{}/bold.nii.gz'.format(path, subject_no))    
+    mask = nib.load('{}subj{}/mask4_vt.nii.gz'.format(path, subject_no))  
+    labels_path = '{}subj{}/labels.txt'.format(path, subject_no)      
+    labels = pd.read_csv(labels_path, sep=' ')  
+    
+    bold_data = bold.get_fdata()
     
     # make 5-dimensional numpy array for chunk data
-    chunks = [];
+    chunks = []
     
-    for i in range(12):
-        labels_chunk = labels.query('chunks == %d' % (i))
-        bold_chunk = bold.get_fdata()[:, :, :, labels_chunk.index]
+    group_indices = labels.groupby('chunks').indices   
+       
+    for _, indices in group_indices.items():
+        bold_chunk = bold_data[:, :, :, indices]
+        #bold_chunk = preprocess(np.array(bold_chunk))
         chunks.append(bold_chunk)
         
-    chunks_np = np.array(chunks)
+    chunks = np.array(chunks)
     # shape of chunks is (12, 40, 64, 64, 121)
+    bold_data = chunks.reshape(bold_data.shape)
+    # shape (40, 64, 64, 1452)
     
-    # pre-process all chunks
-    chunks_np_pp = preprocess(chunks_np)
-    
-    # ------------- Compute model RDM ----------
-    # first, get labels of images
-    
-    # remove unwanted labels: rest and scrambledpix
+    # remove unwanted labels
     index_names = labels[(labels['labels'] == 'rest') | (labels['labels'] == 'scrambledpix')].index
     labels.drop(index_names, inplace = True)
+    group_indices = labels.groupby('chunks').indices # new
     
-    # also drop MR images corresponding to the dropped labels
-    # TODO
+    # drop MR images corresponding to the dropped labels    
+    bold_data = bold_data[:, :, :, labels.index]
+    # shape (40, 64, 64, 756)
     
-    # get amount of leftover labels
-    unique_labels = labels['labels'].unique()
-    no_of_labels = len(unique_labels)
+    # make new chunks
+    chunks = []
+    for _, indices in group_indices.items():
+        bold_chunk = bold_data[:, :, :, indices]
+        chunks.append(bold_chunk)
+        
+    chunks = np.array(chunks)
     
-    # construct model RDM: square matrix with diagonal of zeros and ones elsewhere    
-    n_images = chunks_np_pp.shape[4]
+    # ------------- Compute model RDM ----------    
+    # square matrix with diagonal of zeros and ones elsewhere    
+    n_images = chunks.shape[4]
     mRDM = np.zeros((n_images, n_images))
     
     for i in range(mRDM.shape[0]):
@@ -78,52 +75,52 @@ def main():
                 mRDM[i, j] = 1
     
     # flatten model RDM into vector
-    mRDMvec = mRDM.flatten()
-        
+    mRDMvec = mRDM.flatten() # length 3969
+     
     # -------------Make searchlights around each voxel------
     # --> loop through voxels in ROI and make searchlight centering on each
     
-    bold_array = bold.get_fdata()
-    mask_array = mask.get_fdata()
-    voxel_grid = np.array(list(np.ndindex(bold_array.shape[:3])))
+    mask_data = mask.get_fdata()
+    RSA = np.zeros(((bold_data.shape[0], bold_data.shape[1], bold_data.shape[2])))
     
-    RSA = np.zeros(((bold_array.shape[0], bold_array.shape[1], bold_array.shape[2])))
+    voxel_grid = np.array(list(np.ndindex(bold_data.shape[:3])))
+    searchlight_grid = distance.cdist(np.array(mask_data.nonzero()).T,voxel_grid) <= searchlight_radius
+    # shape (577, 163840)
     
-    radius = 2 # for searchlight
+    bold_data_flat = bold_data.reshape(-1, bold_data.shape[-1])
     
-    for x_dim,y_dim,z_dim in np.ndindex(bold_array.shape[:3]):
-        # now we have one voxel timeseries 
+    for voxel in list(range(searchlight_grid.shape[0])):
+            
+        images = bold_data_flat[searchlight_grid[voxel].nonzero()].T # size (756, 33)
         
-        if mask_array[x_dim,y_dim,z_dim] == 1:
-            print('Voxel in ROI: computing searchlight \n')
-            
-            centerpoint = [[x_dim,y_dim,z_dim]]
-            
-            distances = distance.cdist(centerpoint, voxel_grid, 'euclidean')   
-            searchlight = bold_array[bold_array[distances <= radius]]
-            
-            # TODO: get single BOLD images for RDM calculation
-            
-            # compute RDM and flatten into vector
-            RDM = distance.pdist(searchlight, 'correlation')
-            RDM = distance.squareform(RDM)
-            RDMvec = RDM.flatten()
-            
-            # compute RSA
-            RSA_value, p_value = spearmanr(mRDMvec, RDMvec)
-            
-            # save RSA value
-            RSA[x_dim,y_dim,z_dim] = RSA_value;
-            
-        else:
-            print('Voxel not in ROI \n')      
-
+        RDM = distance.squareform(distance.pdist(images, metric='correlation'))
+        RDMvec = RDM.flatten() # length 571536
+        
+        # compute RSA
+        RSA[x_dim,y_dim,z_dim] = spearmanr(mRDMvec, RDMvec)[0]
+        # --> ERROR: vector lengths don't match
+        
+        
+    return RSA
+    
+def main():   
+    
+    #group level analysis
+    no_of_subjects = 6
+    searchlight_radius = 2
+    
+    allRSA = np.zeros(no_of_subjects)
+    
+    path = "../CDWAssignment_data/"
+    
+    for subject in range(1,no_of_subjects+1):
+        allRSA[subject] = get_one_RSA(subject, path, searchlight_radius)
+    
+    # compute mean RSA across all subjects
+    
     
     # ------------------Make image of RSA values in ROI-----------
-    
-    # Pack the new data inside a Nift1Image using the same affine transform as
-    # the original BOLD image
-    RSA_plotting = nib.Nifti1Image(RSA, bold.affine)
+    RSA_plotting = nib.Nifti1Image(mean_RSA, bold.affine)
     
     nil.plotting.plot_glass_brain(RSA_plotting)
     
