@@ -12,7 +12,7 @@ rule download:
 rule searchlight_analysis:
     input:
         script='src/searchlight_analysis.py',
-        dir=directory('data/{subj}')
+        dir='data/{subj}'
     output: 'processed_data/{subj}.npz'
     shell: 'python {input.script} {input.dir} {output}'
 
