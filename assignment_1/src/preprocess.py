@@ -20,13 +20,11 @@ def preprocess_data(bd, zero_nan=False):
     processed_bd:
        Corresponding BrainData object with processed data
     """
-    data = bd.data
-    processed_data = np.empty_like(data)
-    chunks = bd.chunks
-    assert data.shape[-1] == len(chunks)
-    for chunk in set(chunks):
-        chunk_flt = chunks == chunk
-        data_chunk = data[..., chunk_flt]
+    processed_data = np.empty_like(bd.data)
+    unique_chunks = set(bd.chunks)
+    for uc in unique_chunks:
+        chunk_flt = bd.chunks == uc
+        data_chunk = bd.data[..., chunk_flt]
         data_chunk = detrend(data_chunk, axis=-1)
         data_chunk = zscore(data_chunk, axis=-1)
         processed_data[..., chunk_flt] = data_chunk
@@ -41,6 +39,6 @@ def preprocess_data(bd, zero_nan=False):
 
 
 if __name__ == '__main__':
-    bd = BrainData.from_directory('subj1')
+    bd = BrainData.from_directory('data/subj1')
     bd = preprocess_data(bd)
     bd.write('preprocessed.npz')

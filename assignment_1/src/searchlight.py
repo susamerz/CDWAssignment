@@ -17,16 +17,14 @@ def build_searchlight_indices(radius=2):
        Origin is in the middle of the searchlight.
     """
     diameter = 2 * radius + 1
-    center_v = np.array([radius] * 3)
-    center_iv = center_v[np.newaxis]
-    point_vj = np.mgrid[0:diameter, 0:diameter, 0:diameter].reshape(3, -1)
-    point_jv = point_vj.T
-    dist_ij = cdist(center_iv, point_jv)
-    dist_j = dist_ij[0]
+    center_point = np.array([radius] * 3)
+    grid_points = np.mgrid[0:diameter, 0:diameter, 0:diameter].reshape(3, -1).T
+    # Add extra axis to center point to match cdist function
+    distances = cdist(center_point[np.newaxis], grid_points)[0]
     # Select points within radius (including boundary)
     radius_plus_epsilon = radius * (1 + 1e-10)
-    flt_j = dist_j < radius_plus_epsilon
-    return point_jv[flt_j] - center_v
+    flt = distances < radius_plus_epsilon
+    return grid_points[flt] - center_point
 
 
 if __name__ == '__main__':

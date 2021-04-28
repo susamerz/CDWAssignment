@@ -16,10 +16,10 @@ def build_rdm(data):
     rdm:
        2D array of shape nxn, where n is the number of labels
     """
-    data_gt = data.reshape(-1, data.shape[-1])
-    corr = pdist(data_gt.T, metric='correlation')
-    corr_tt = squareform(corr)
-    return corr_tt
+    reshaped_data = data.reshape(-1, data.shape[-1]).T
+    corr = pdist(reshaped_data, metric='correlation')
+    rdm = squareform(corr)
+    return rdm
 
 
 def build_model_rdm(labels):
@@ -36,10 +36,10 @@ def build_model_rdm(labels):
        2D array of shape nxn, where n is the number of labels
        (including all duplicates)
     """
-    data_gt = labels[np.newaxis]
-    corr = pdist(data_gt.T, metric=lambda u, v: u != v)
-    corr_tt = squareform(corr)
-    return corr_tt
+    reshaped_data = labels[np.newaxis].T
+    corr = pdist(reshaped_data, metric=lambda u, v: u != v)
+    rdm = squareform(corr)
+    return rdm
 
 
 def calculate_rsa_score(rdm1, rdm2):
@@ -57,8 +57,8 @@ def calculate_rsa_score(rdm1, rdm2):
     score:
        RSA score
     """
-    corr, _ = spearmanr(rdm1.flatten(), rdm2.flatten())
-    return corr
+    score, _ = spearmanr(rdm1.flatten(), rdm2.flatten())
+    return score
 
 
 if __name__ == '__main__':
