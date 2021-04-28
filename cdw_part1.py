@@ -11,13 +11,7 @@ from scipy.stats import spearmanr
 def preprocess(chunk):
     # Detrends and z-scores one chunk of BOLD MRI data
     
-    for x_dim in range(chunk.shape[0]):
-        for y_dim in range(chunk.shape[1]):
-            for z_dim in range(chunk.shape[2]):
-                # now we have one voxel timeseries
-                
-                voxel_ts = chunk[x_dim, y_dim, z_dim, :]
-                chunk[x_dim, y_dim, z_dim, :] = sc.stats.zscore(sc.signal.detrend(voxel_ts), axis=-1)
+    chunk = sc.stats.zscore(sc.signal.detrend(chunk, axis=-1), axis=-1)
     
     return chunk            
     
