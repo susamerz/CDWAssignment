@@ -136,6 +136,6 @@ def create_bold_RDM(data, location, searchlight_radius, voxel_index_grid):
     # Create searchlight areas for each ROI location
     search_locs = searchlight(location, searchlight_radius, voxel_index_grid)
     search_locs_data = np.array([data[loc[0], loc[1], loc[2], :].flatten() for loc in search_locs]).T
-    RDM = squareform(pdist(search_locs_data, metric='correlation'))
+    RDM = squareform(pdist(search_locs_data, metric='correlation'))  # Pearson distance <=> pairwise correlation
 
     return RDM
