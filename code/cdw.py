@@ -3,30 +3,31 @@
 """
 CODE DESIGN WORKSHOP 2021
 Functions for pipeline steps
-Run with the interactive script
 
 @author:  jenni.saaristo@helsinki.fi
-@version: 2021-04-22
-@notes:   Fixed searchlight radius
+@version: 2021-04-28
+@notes:   Redo after feedback, some docstrings missing
 """
 
 from scipy import signal, stats
 from scipy.spatial.distance import pdist, squareform, cdist
 import numpy as np
+import pandas as pd
 import nibabel as nib
 from itertools import compress
 
-def load_preprocess(boldpath, labels):
+
+def preprocess(bold, labels):
     """
-    Minimal preprocessing of BOLD-data
+    Minimal preprocessing of BOLD data
     
-    Given a path to a 4D BOLD-data, loads it, then detrends and z-scores it
+    Given a 4D BOLD-data detrends and z-scores it
     run-wise ("chunks" in labels).
 
     Parameters
     ----------
-    boldpath : str
-        Path to original BOLD data.
+    bold : Nifti1Image
+        Original BOLD data.
     labels : DataFrame
         Labels for MRI frames.
 
@@ -36,11 +37,8 @@ def load_preprocess(boldpath, labels):
         Preprocessed data.
     """
     
-    print('Getting data...')
-    bold = nib.load(boldpath)
-    
     print('Copying data...')
-    prep = bold.get_fdata().copy()  # memory hog?
+    prep = bold.get_fdata()
     
     print('Done. Begin preprocessing...')
     for c in labels.chunks.unique():
@@ -56,157 +54,158 @@ def load_preprocess(boldpath, labels):
         if prep[:,:,:,inds][np.isnan(this_prep)].sum() == 0:
             this_prep[np.isnan(this_prep)] = 0
         else:
-            raise RuntimeWarning()
-            print('Unexpected nans! Aborting.')
-            return None
+            raise Exception('Unexpected nans! Aborting.')
         
         prep[:,:,:,inds] = this_prep
     
     bold_prep = nib.Nifti1Image(prep, bold.affine, bold.header)
+        
     print('Done.')
     return bold_prep
 
-def reorder_data(bold_orig, labels, select_labels):
+def drop_by_labels(bold, labels, bad_labels):
     """
-    Reorders BOLD data accoring to selected conditions
+    Drop unwanted labels and fMRI frames
+    
+    Takes a 4D BOLD image and drops frames that correspond to unwanted
+    labels, and also drops those labels from the labels DataFrame.
 
     Parameters
     ----------
-    bold_orig : Nifti1Image
-        Original 4D BOLD data.
+    bold : Nifti1Image
+        Full 4D BOLD image.
     labels : DataFrame
-        Condition label of each MRI frame.
-    select_labels : str array
-        Labels of conditions selected for analysis.
+        Full list of frame labels.
+    bad_labels : list of str
+        Unwanted labels.
 
     Returns
     -------
-    conds : dict
-        Dictionary that gives condition labels and their concomitant MRI
-        frame indices.
-    bold_conds : Nifti1Image
-        Reordered 4D BOLD data.
+    bold_subset : Nifti1Image
+        Selected BOLD frames.
+    labels_subset : DataFrame
+        Selected frame labels.
 
     """
     
-    # Get the inds of the MRI frames that pertain to each label, i.e. condition
-    conds = {}
-    for lab in select_labels:
-        conds[lab] = labels.query('labels == @lab').index
+    good_inds = labels.query('labels not in @bad_labels').index
+    labels_subset = labels.loc[good_inds]
     
-    # Reorder data
-    print('Reordering data and dropping unnecessary MRI frames...')
-    bold_conds = np.concatenate(list(time2conds(bold_orig, conds)), axis=-1)
+    print('Dropping unwanted frames...')
+    frames_subset = bold.get_fdata()[:,:,:,good_inds]
+    bold_subset = nib.Nifti1Image(frames_subset, bold.affine, bold.header)
+    
     print('Done.')
+    return (bold_subset, labels_subset)
     
-    return (conds, bold_conds)
+
+def reorder_by_labels(bold, labels):
+    """
+    Reorder labels and frames of 4D BOLD image
+    
+    Sorts labels (of frames) alphabetically and then reorders BOLD frames
+    to match that order.
+
+    Parameters
+    ----------
+    bold : Nifti1Image
+        Original 4D BOLD image.
+    labels : DataFrame
+        Original frame labels.
+
+    Returns
+    -------
+    bold_sorted : Nifti1Image
+        Sorted 4D BOLD image..
+    labels_sorted : DataFrame
+        Sorted frame labels.
+
+    """
+    
+    labels['fmri_i'] = range(len(labels))
+    labels_sorted = labels.sort_values(by=['labels','chunks'])
+    labels_sorted.reset_index(inplace=True)
+    
+    print('Reordering data...')
+    frames_sorted = bold.get_fdata()[:,:,:,labels_sorted['fmri_i']]
+    bold_sorted = nib.Nifti1Image(frames_sorted, bold.affine, bold.header)
+    
+    print('Done.')
+    return (bold_sorted, labels_sorted)
 
 
-def create_modelRDM(conds):
-    # Makes the model RDM, given conditions
+def create_modelRDM(labels):
+    # Makes the model RDM, given labels
     
-    # Get framecounts
-    lens = [len(conds[k]) for k in conds.keys()]
-    start_inds = np.cumsum(lens)
-    start_inds = np.insert(start_inds,0,0)
-    
-    # Fill matrix according to framecounts
-    rdm_model = np.ones((sum(lens),sum(lens)))
-    for i in range(len(conds)):
-        start = start_inds[i]
-        stop = start_inds[i+1]
-        rdm_model[start:stop, start:stop] = 0 
+    # To get an "identity matrix" over labels we first expand labels to dummies
+    # (one column per label with values=[0,1]) and then get the dot product of
+    # that and its transpose -- result is 1 when the labels of the frame match,
+    # and 0 when they don't. To get RDM, switch those.
+    dummies = pd.get_dummies(labels.labels).to_numpy()
+    rdm_model = np.dot(dummies, dummies.T)
+    rdm_model = abs(rdm_model-1)
     
     return rdm_model
 
 
-def calculate_maskRSA(bold, mask, rad, rdm_model):
-    """
-    Get RSA scores inside mask by searchlight
-    
-    Get a brain of RSA scores, calculated with a given radius of searchlight
-    for voxels inside a given mask, and compared to model RDM.
-
-    Parameters
-    ----------
-    bold_orig : Nifti1Image
-        The original 4D BOLD data in chronological (time) order.
-    mask : Nifti1Image
-        A 3D mask to restrict the analysis with.
-    rad : int
-        Radius of searchlight (voxels). This currently defines a square, not
-        a sphere -- subject to revision at a later point.
-    rdm_model : ndarray
-        The model RDM to compare the searchlight RDM to.
-
-    Returns
-    -------
-    rsa_brain : ndarray
-        RSA-scores in 3D brain space.
-        
-    """
-    print('Calculating RSA...')
-    rsa_brain = np.zeros(mask.shape)
+def get_patch_data(bold, mask, rad):
     
     # Get (x,y,z) inds of all voxels inside mask
     inds = np.where(mask.get_fdata() == 1)
     print(f'Number of voxels in mask:: {len(inds[0])}')
     
-    # Get searchlight kernel (same for every voxel)
-    kernel = make_searchlight(rad)
+    # Create searchlight kernel
+    kernel = _make_searchlight(rad)
+    print(f'Number of voxels in searchlight: {len(kernel)}')
     
-    # For each voxel in mask:
-    i = 0
-    for ind in zip(inds[0], inds[1], inds[2]):
+    # For each voxel, get and return patch data
+    for center_ind in zip(inds[0], inds[1], inds[2]):
         
-        if i%100 == 0:
-            print(f'{i} voxels done...')
+        # Get inds for this patch
+        patch_inds = []
+        for (kx,ky,kz) in kernel:
+            patch_inds.append( (center_ind[0]+kx,
+                                center_ind[1]+ky,
+                                center_ind[2]+kz) )
         
-        # Calc RDM in searchlight
-        rdm_bold = calculate_boldRDM(bold, ind, kernel)
+        # Get the bold data for the patch
+        patch_data = np.vstack([bold.get_fdata()[x,y,z,:] for (x,y,z) in patch_inds]).T
         
-        # Calc RSA with model and save it
-        (rho, p) = stats.spearmanr(rdm_bold, rdm_model, axis=None)
-        rsa_brain[ind] = rho
-        
-        i += 1
+        yield (center_ind, patch_data)
+
+
+def calc_data_rdm(patch_data):
     
-    # Return RSA brain
-    print('Done.')
-    return rsa_brain
+    # Calculate dissimilarity of patterns at each frame
+    rdm = squareform(pdist(patch_data, metric='correlation'))
+    
+    return rdm
+
+
+def calc_rsa(rdm_bold, rdm_model):
+    
+    # Calculate RSA score for the two RDMs 
+    (rsa_score, _) = stats.spearmanr(rdm_bold, rdm_model, axis=None)
+    
+    return rsa_score
 
 # =============================================================================
 #                        INTERNAL HELPER FUNCTIONS
 # =============================================================================
     
 
-def calculate_boldRDM(bold, ind, kernel):
-    # Calculates the data RDM in the given searchlight around voxel index ind
-    
-    # Get the searchlight voxels for this ind
-    voxel_inds = [(ind[0]+k[0], ind[1]+k[1],ind[2]+k[2]) for k in kernel]
-    voxels = np.vstack([bold[v[0],v[1],v[2],:] for v in voxel_inds]).T
-    
-    # Calculate dissimilarity
-    rdm_bold = squareform(pdist(voxels, metric='correlation'))
-    
-    return rdm_bold
-
-
-def make_searchlight(rad):
+def _make_searchlight(rad):
     # Makes a relative searchlight kernel (origo=(0,0,0)) with radius rad
     
     # Define a square, then filter out the corners (where dist > rad)
-    rad_square = [(n[0]-rad,n[1]-rad,n[2]-rad) for n in np.ndindex(2*rad+1,2*rad+1,2*rad+1)]
+    diam = 2*rad+1
+    rad_square = []
+    for (x,y,z) in np.ndindex(diam,diam,diam):
+        rad_square.append( (x-rad,y-rad,z-rad) ) # put origo in center of square
+    
     distances = cdist(rad_square, [(0,0,0)])
     kernel = list(compress(rad_square, distances < rad))
     
-    print(f'Number of voxels in searchlight: {len(kernel)}')
-    
     return kernel
 
-def time2conds(bold, conds):
-    # reorganise bold to conds
-    for k in conds.keys():
-        yield bold.get_fdata()[:,:,:,conds[k]]
 
