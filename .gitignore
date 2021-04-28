@@ -1,3 +1,5 @@
 subj1/**
 *.gz
-.vscode/
+.vscode/**
+subjects/**
+*.txt
