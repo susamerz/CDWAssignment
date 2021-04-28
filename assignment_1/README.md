@@ -1,24 +1,15 @@
 # Running the pipeline
 
-1. Fetch test data:
+Workflow is implemented with snakemake (`python -m pip install snakemake`).
 
-        wget http://data.pymvpa.org/datasets/haxby2001/subj1-2010.01.14.tar.gz
-        tar xvf subj1-2010.01.14.tar.gz
+* Run the workflow:
 
-1. Searchlight analysis:
+        snakemake -j 1
 
-        python src/main.py --rsa_fpath rsa.npz
-        python src/plot.py rsa.npz
+  Average brain is plotted in `plots/average.png`
+  and individual brains in `plots/subjX.png`.
 
+* (Optional) To visualize the workflow to `dag.svg`:
 
-## Testing scripts for subtasks
+        snakemake --dag | dot -Tsvg > dag.svg
 
-1. Preprocess the data (a temporary file is created):
-
-        python src/preprocess.py
-
-1. Load the temporary file, calculate and visualize
-   a representational dissimilarity matrix (RDM)
-   and a representational similarity analysis (RSA) score:
-
-        python src/rdm.py
