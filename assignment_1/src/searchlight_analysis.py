@@ -12,8 +12,7 @@ def main(data_dpath, output_fpath, radius):
     bd = BrainData.from_directory(data_dpath, apply_mask=False)
 
     print('Preprocessing')
-    data = preprocess_data(bd)
-    bd.data = data
+    bd = preprocess_data(bd)
 
     print('Starting searchlight analysis')
     bd.sort_by_labels()

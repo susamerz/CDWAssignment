@@ -2,6 +2,8 @@ import numpy as np
 from scipy.signal import detrend
 from scipy.stats import zscore
 
+from utils import BrainData
+
 
 def preprocess_data(bd, zero_nan=False):
     """Preprocess brain data.
@@ -15,8 +17,8 @@ def preprocess_data(bd, zero_nan=False):
 
     Returns
     -------
-    processed_data:
-       Processed data part of the BrainData object
+    processed_bd:
+       Corresponding BrainData object with processed data
     """
     data = bd.data
     processed_data = np.empty_like(data)
@@ -30,13 +32,15 @@ def preprocess_data(bd, zero_nan=False):
         processed_data[..., chunk_flt] = data_chunk
     if zero_nan:
         processed_data[np.isnan(processed_data)] = 0.0
-    return processed_data
+    return BrainData(data=processed_data,
+                     chunks=bd.chunks.copy(),
+                     labels=bd.labels.copy(),
+                     mask=bd.mask.copy(),
+                     affine=bd.affine.copy(),
+                     )
 
 
 if __name__ == '__main__':
-    from utils import BrainData
-
     bd = BrainData.from_directory('subj1')
-    data = preprocess_data(bd)
-    bd.data = data
+    bd = preprocess_data(bd)
     bd.write('preprocessed.npz')
