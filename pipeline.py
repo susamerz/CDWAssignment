@@ -11,6 +11,8 @@ from nilearn import plotting
 from tools import *  # make sure namespace doesn't get messed up!
 from matplotlib.pyplot import matshow, savefig
 
+
+
 # Input params
 searchlight_radius = 2
 
@@ -30,7 +32,7 @@ processed_bold_data = preprocess_bold_data(data, chunk_id)
 preprocessed_image = nib.Nifti1Image(processed_bold_data, bold.affine)
 
 # Remove unwanted images from data
-pic_voxels, pic_labels = remove_rows(processed_bold_data, labels, ['rest', 'scrambled pix'])
+pic_voxels, pic_labels = remove_rows(processed_bold_data, labels, ['rest', 'scrambledpix'])
 
 print("Sorting...")
 labels_sorted = pic_labels.sort_values('labels')
@@ -63,8 +65,7 @@ for loc in ROI_locs:
     ROI_RSAs[loc], RSAp = spearmanr(ROI_RDM.flatten(), model_RDM.flatten())
     if np.isnan(ROI_RSAs[loc]):
         print(ROI_RDM)
-        print("RSA value was nan")
-        raise ValueError
+        raise ValueError("RSA value was nan")
         break
     ROI_RDM_progress_bar.next()
 
