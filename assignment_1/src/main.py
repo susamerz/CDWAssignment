@@ -7,7 +7,7 @@ from searchlight import build_searchlight_indices
 from rdm import build_rdm, build_model_rdm, calculate_rsa_score
 
 
-def main(data_dpath, rsa_fpath, radius):
+def main(data_dpath, output_fpath, radius):
     print(f'Reading data from {data_dpath}')
     bd = BrainData.from_directory(data_dpath, apply_mask=False)
 
@@ -45,19 +45,19 @@ def main(data_dpath, rsa_fpath, radius):
         print(f'\r{(i + 1) / Ni * 100:.2f}% done', end='')
 
     print()
-    print(f'Writing RSA data to {rsa_fpath}')
+    print(f'Writing RSA data to {output_fpath}')
     rsa_bd = BrainData(data=rsa_data_g[..., np.newaxis], mask=bd.mask,
                        labels=np.array(['']), chunks=np.array([0]),
                        affine=bd.affine)
-    rsa_bd.write(rsa_fpath)
+    rsa_bd.write(output_fpath)
 
 
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dpath', type=Path, default='subj1')
-    parser.add_argument('--rsa_fpath', type=Path, default='rsa.npz')
+    parser.add_argument('data_dpath', type=Path)
+    parser.add_argument('output_fpath', type=Path)
     parser.add_argument('--radius', type=int, default=2)
     args = parser.parse_args()
 
