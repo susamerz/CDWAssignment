@@ -1,6 +1,9 @@
+SUBJECTS = [f'subj{i}' for i in range(1, 7)]
+
 rule all:
     input:
-        'plots/subj1.png'
+        'plots/average.png',
+        expand('plots/{subj}.png', subj=SUBJECTS)
 
 rule download:
     output: directory('data/{subj}')
@@ -12,6 +15,11 @@ rule searchlight_analysis:
     shell: 'python src/searchlight_analysis.py {input} {output}'
 
 rule plot:
-    input: 'processed_data/{subj}.npz'
-    output: 'plots/{subj}.png'
+    input: 'processed_data/{file}.npz'
+    output: 'plots/{file}.png'
     shell: 'python src/plot.py {input} {output}'
+
+rule calculate_average:
+    input: expand('processed_data/{subj}.npz', subj=SUBJECTS)
+    output: 'processed_data/average.npz'
+    shell: 'python src/average.py {input} {output}'
