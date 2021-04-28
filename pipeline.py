@@ -25,18 +25,19 @@ labels = pd.read_csv('subj1/labels.txt', sep=' ')
 data = bold.get_fdata()
 mask_data = mask.get_fdata()
 
+# Remove unwanted images from data
+wanted_data, wanted_labels = remove_rows(data, labels, ['rest', 'scrambledpix'])
+
 # Preprocessing
 print("Pre-processing...")
-chunk_id = labels.chunks.to_numpy()
-processed_bold_data = preprocess_bold_data(data, chunk_id)
+chunk_id = wanted_labels.chunks.to_numpy()
+processed_bold_data = preprocess_bold_data(wanted_data, chunk_id)
 preprocessed_image = nib.Nifti1Image(processed_bold_data, bold.affine)
 
-# Remove unwanted images from data
-pic_voxels, pic_labels = remove_rows(processed_bold_data, labels, ['rest', 'scrambledpix'])
 
 print("Sorting...")
-labels_sorted = pic_labels.sort_values('labels')
-voxels_sorted = pic_voxels[:, :, :, pic_labels.index]
+labels_sorted = wanted_labels.sort_values('labels')
+voxels_sorted = processed_bold_data[:, :, :, labels_sorted.index]
 
 # create voxel index
 print("Creating voxel index...")
@@ -59,9 +60,12 @@ ROI_locs = list(map(tuple, np.argwhere(mask_data == 1)))
 ROI_RSAs  ={}
 ROI_RDM_progress_bar = Bar('Computing RDMs for ROIs', max=len(ROI_locs))
 
-for loc in ROI_locs:
+# create a searchlight generator for returning search locations per single center voxel
+searchlight_gen = searchlight_generator(ROI_locs, searchlight_radius, voxel_index_grid)
 
-    ROI_RDM = create_bold_RDM(voxels_sorted, loc, searchlight_radius, voxel_index_grid)
+for loc in ROI_locs:
+    searchlight_locs = next(searchlight_gen)
+    ROI_RDM = create_bold_RDM(voxels_sorted, searchlight_locs)
     ROI_RSAs[loc], RSAp = spearmanr(ROI_RDM.flatten(), model_RDM.flatten())
     if np.isnan(ROI_RSAs[loc]):
         print(ROI_RDM)

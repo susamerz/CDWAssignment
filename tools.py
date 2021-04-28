@@ -81,10 +81,13 @@ def searchlight(center_voxel, radius, search_grid):
     """
 
     distances = scipy.spatial.distance.cdist(search_grid, np.array([center_voxel]))
-    found_locations = np.array(search_grid)[distances.flatten() <= radius]
+    found_locations = np.array(search_grid)[distances.flatten() < radius]
 
     return found_locations
 
+def searchlight_generator(center_voxels, radius, search_grid):
+
+    return (searchlight(center_voxel, radius, search_grid) for center_voxel in center_voxels)
 
 def remove_rows(data, labels, labels_to_remove):
     """Removes 'rest' labeled data.
@@ -107,10 +110,12 @@ def remove_rows(data, labels, labels_to_remove):
 
     """
     for label in labels_to_remove:
+        n_orig_images = len(data[0, 0, 0, :])
         data = data[:, :, :, labels.query('labels != @label').index]
         labels = labels[labels.labels != label]
         labels.reset_index(drop=True, inplace=True)  # makes index match row numbering in pic_voxels
-
+        n_removed_images = n_orig_images - len(data[0, 0, 0, :])
+        print(f"removed {n_removed_images} images with label {label}")
     return data, labels
 
 def create_model_RDM(labels):
@@ -132,9 +137,8 @@ def create_model_RDM(labels):
 
     return model_RDM
 
-def create_bold_RDM(data, location, searchlight_radius, voxel_index_grid):
-    # Create searchlight areas for each ROI location
-    search_locs = searchlight(location, searchlight_radius, voxel_index_grid)
+def create_bold_RDM(data, search_locs):
+
     search_locs_data = np.array([data[loc[0], loc[1], loc[2], :].flatten() for loc in search_locs]).T
     RDM = squareform(pdist(search_locs_data, metric='correlation'))  # Pearson distance <=> pairwise correlation
 
