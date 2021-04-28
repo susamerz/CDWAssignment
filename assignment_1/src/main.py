@@ -7,21 +7,17 @@ from searchlight import build_searchlight_indices
 from rdm import build_rdm, build_model_rdm, calculate_rsa_score
 
 
-def main(data_dpath, tmp_fpath, rsa_fpath, radius):
-    if not tmp_fpath.exists():
-        print(f'Preprocessing data from {data_dpath}')
-        bd = BrainData.from_directory(data_dpath, apply_mask=False)
-        data = preprocess_data(bd)
-        bd.data = data
-        print(f'Writing data to {tmp_fpath}')
-        bd.write(tmp_fpath)
+def main(data_dpath, rsa_fpath, radius):
+    print(f'Reading data from {data_dpath}')
+    bd = BrainData.from_directory(data_dpath, apply_mask=False)
 
-    print(f'Loading preprocessed data from {tmp_fpath}')
-    bd = BrainData.from_npz_file(tmp_fpath)
-    bd.sort_by_labels()
-    model_rdm = build_model_rdm(bd.labels)
+    print('Preprocessing')
+    data = preprocess_data(bd)
+    bd.data = data
 
     print('Starting searchlight analysis')
+    bd.sort_by_labels()
+    model_rdm = build_model_rdm(bd.labels)
     sl_points_iv = build_searchlight_indices(radius=radius)
     print(f'Searchlight has radius {radius} '
           f'and {sl_points_iv.shape[0]} points')
@@ -61,7 +57,6 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dpath', type=Path, default='subj1')
-    parser.add_argument('--tmp_fpath', type=Path, default='tmp.npz')
     parser.add_argument('--rsa_fpath', type=Path, default='rsa.npz')
     parser.add_argument('--radius', type=int, default=2)
     args = parser.parse_args()
