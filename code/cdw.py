@@ -42,7 +42,7 @@ def preprocess(bold, labels):
     
     print('Done. Begin preprocessing...')
     for c in labels.chunks.unique():
-        print('Processing chunk ' + str(c))
+        print(f'Processing chunk {c}')
         inds = labels.query('chunks == @c').index
         this_prep = prep[:,:,:,inds]
         this_prep = signal.detrend(this_prep)
@@ -51,7 +51,7 @@ def preprocess(bold, labels):
         # scipy z-score does not watch out for zero-division, so
         # we have to correct those ourselves. Replacing nans with
         # zeros makes sense as long as the input is all zeros, too.
-        if prep[:,:,:,inds][np.isnan(this_prep)].sum() == 0:
+        if np.all(prep[...,inds][np.isnan(this_prep)] == 0):
             this_prep[np.isnan(this_prep)] = 0
         else:
             raise Exception('Unexpected nans! Aborting.')
@@ -92,7 +92,7 @@ def drop_by_labels(bold, labels, bad_labels):
     labels_subset = labels.loc[good_inds]
     
     print('Dropping unwanted frames...')
-    frames_subset = bold.get_fdata()[:,:,:,good_inds]
+    frames_subset = bold.get_fdata()[...,good_inds]
     bold_subset = nib.Nifti1Image(frames_subset, bold.affine, bold.header)
     
     print('Done.')
@@ -122,12 +122,11 @@ def reorder_by_labels(bold, labels):
 
     """
     
-    labels['fmri_i'] = range(len(labels))
-    labels_sorted = labels.sort_values(by=['labels','chunks'])
-    labels_sorted.reset_index(inplace=True)
+    labels['orig_bold_ind'] = range(len(labels))
+    labels_sorted = labels.sort_values(by=['labels','chunks'],ignore_index=True)
     
     print('Reordering data...')
-    frames_sorted = bold.get_fdata()[:,:,:,labels_sorted['fmri_i']]
+    frames_sorted = bold.get_fdata()[:,:,:,labels_sorted['orig_bold_ind']]
     bold_sorted = nib.Nifti1Image(frames_sorted, bold.affine, bold.header)
     
     print('Done.')
@@ -138,8 +137,9 @@ def create_model_rdm(labels):
     """
     Create RDM from labels
     
-    Creates a theoretical representational dissimilarity matrix from given
-    labels: dissimilarity within label is 0, between labels 1.
+    Creates a theoretical representational dissimilarity matrix that
+    discriminates between all the given categories: dissimilarity within
+    label is 0, between labels 1.
 
     Parameters
     ----------
@@ -153,13 +153,10 @@ def create_model_rdm(labels):
 
     """
     
-    # To get an "identity matrix" over labels we first expand labels to dummies
-    # (one column per label with values=[0,1]) and then get the dot product of
-    # that and its transpose -- result is 1 when the labels of the frame match,
-    # and 0 when they don't. To get RDM, switch those.
-    dummies = pd.get_dummies(labels.labels).to_numpy()
-    rdm_model = np.dot(dummies, dummies.T)
-    rdm_model = abs(rdm_model-1)
+    def dissimilarity(label1, label2):
+        return label1 != label2
+
+    rdm_model = squareform(pdist(labels[['labels']], metric=dissimilarity))
     
     return rdm_model
 
@@ -178,14 +175,10 @@ def get_patch_data(bold, mask, rad):
     for center_ind in zip(inds[0], inds[1], inds[2]):
         
         # Get inds for this patch
-        patch_inds = []
-        for (kx,ky,kz) in kernel:
-            patch_inds.append( (center_ind[0]+kx,
-                                center_ind[1]+ky,
-                                center_ind[2]+kz) )
+        patch_inds = np.add(center_ind, kernel)
         
         # Get the bold data for the patch
-        patch_data = np.vstack([bold.get_fdata()[x,y,z,:] for (x,y,z) in patch_inds]).T
+        patch_data = bold.get_fdata()[tuple(patch_inds.T)].T
         
         yield (center_ind, patch_data)
 
@@ -199,7 +192,7 @@ def calc_data_rdm(patch_data):
     Parameters
     ----------
     patch_data : ndarray
-        BOLD data (voxels x frames).
+        BOLD data (frames x voxels).
 
     Returns
     -------

@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 import cdw
 import nibabel as nib
+import matplotlib.pyplot as plt
 
 datadir = '/Users/jenska/code/python/_misc/cdw2021/DATA'
 
@@ -49,7 +50,7 @@ def run_group_rsa(subjs, **kwargs):
     return rsa_mean_nii
 
 
-def get_rsa_brain(subj,radius=2,force_prep=False,force_calc_rsa=False):
+def get_rsa_brain(subj,radius=2,force_prep=False,force_rsa_calc=False):
     """
     Calculate RSA for one subject
 
@@ -76,7 +77,7 @@ def get_rsa_brain(subj,radius=2,force_prep=False,force_calc_rsa=False):
     #  ----------- Do we need to run the pipeline at all? ----------
     
     is_saved = os.path.isfile(os.path.join(datadir,subj,'rsa_brain.nii'))
-    if is_saved and not force_calc_rsa:
+    if is_saved and not force_rsa_calc:
         print('Returning previously calculated RSA brain.')
         rsa_brain_nii = nib.load(os.path.join(datadir,subj,'rsa_brain.nii'))
         return rsa_brain_nii
