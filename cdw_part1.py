@@ -29,8 +29,8 @@ def get_one_RSA(subject_no, path, searchlight_radius):
         chunks.append(bold_chunk)
         
     chunks = np.array(chunks)
-    bold_data = chunks.reshape(bold_data.shape)
-    
+    bold_data = np.concatenate((chunks[:]),axis=-1) #(40, 64, 64, 1452)
+      
     # remove unwanted labels
     index_names = labels[(labels['labels'] == 'rest') | (labels['labels'] == 'scrambledpix')].index
     labels.drop(index_names, inplace = True)
@@ -82,7 +82,7 @@ def get_one_RSA(subject_no, path, searchlight_radius):
 def main():   
     
     # group level analysis: input wanted subject ids
-    subject_ids = [1]
+    subject_ids = [1,2,3,4,5,6]
     searchlight_radius = 2
     
     if len(subject_ids) == 0:
