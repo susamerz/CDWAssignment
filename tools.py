@@ -47,7 +47,7 @@ def preprocess_bold_data(bold_data, chunk_id):
     processed_bold_np = np.zeros(bold_data.shape)
     chunks = np.unique(chunk_id)
 
-    chunk_bar = Bar('Preprosessing chunks', max=len(chunks))
+    chunk_bar = Bar('Preprocessing chunks', max=len(chunks))
     for chunk in chunks:
         chunk_indices = np.where(chunk_id==chunk)[0]
         bold_chunk = bold_data[:, :, :, chunk_indices]
@@ -160,7 +160,7 @@ def create_bold_RDM(data, search_locs):
         Contains BOLD data in array format
 
     search_locs : list
-        Contains the locatioins to be used in analysis as tuples (3D)"""
+        Contains the locations to be used in analysis as tuples (3D)"""
 
     search_locs_data = np.array([data[loc[0], loc[1], loc[2], :].flatten() for loc in search_locs]).T
     RDM = squareform(pdist(search_locs_data, metric='correlation'))  # Pearson distance <=> pairwise correlation

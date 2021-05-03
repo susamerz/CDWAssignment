@@ -8,12 +8,16 @@ import pandas as pd
 from nilearn import plotting
 from tools import *  # make sure namespace doesn't get messed up!
 from matplotlib.pyplot import matshow, savefig
+import argparse
 
+parser = argparse.ArgumentParser(description='Run RSA analysis for BOLD data for selected subjects.')
+parser.add_argument('subjects', type=int, nargs='+', help='Subject indentifiers (int) used to select subjects.')
+args = parser.parse_args()
 
 # Input params
 searchlight_radius = 2
 
-subject_list = [1, 2, 3, 4, 5, 6]  # number identificators for test subjects to be used in analysis
+subject_list = args.subjects  # number identificators for test subjects to be used in analysis
 
 
 def single_sub_pipeline(subj_no):
@@ -104,18 +108,17 @@ bold_data_shape = first_bold.get_fdata().shape[0:3]
 
 all_ROIs = []
 
-avg_RSA = np.zeros(bold_data_shape)
+RSAs = []
 
 # Following averages over individual RSA plots by adding them one by one into avg_RSA and
 # dividing by number of subjects in the end.
 
 for subj_no in subject_list:
     print(f"analysing subject {subj_no}")
-
     subject_RSAs = single_sub_pipeline(subj_no)
-    avg_RSA = np.add(avg_RSA, subject_RSAs)
+    RSAs.append(subject_RSAs)
 
-avg_RSA = avg_RSA/len(subject_list)
+avg_RSA = np.mean(RSAs, axis=0)
 
 print("Creating plot")
 avg_img = nib.Nifti1Image(avg_RSA, first_bold.affine)
