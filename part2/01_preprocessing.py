@@ -38,7 +38,7 @@ meta = pd.read_csv(config.input_data_path / f'subj{args.subject}' / 'labels.txt'
 for chunk in tqdm(np.unique(meta.chunks), desc='Preprocessing', unit='chunks'):
     chunk_mask = meta.chunks == chunk
     chunk_data = bold.get_fdata()[..., chunk_mask]
-    chunk_data = detrend(chunk_data, type='linear', overwrite_data=True)
+    chunk_data = detrend(chunk_data, type='linear', axis=3, overwrite_data=True)
 
     # For z-scoring, we need to deal with voxels that remain zero at all
     # times.  We ignore the divide-by-zero warning and later backfill the
