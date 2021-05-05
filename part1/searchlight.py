@@ -21,7 +21,7 @@ def searchlight(bold, radius, roi_mask=None):
     radius : int
         The radius of the searchlight, in voxels. This radius excludes the
         "seed" voxel in the center of the searchlight.
-    roi_mask : ndarray of shape (n_i, n_j, n_k) | None
+    roi_mask : Nifti1Image | None
         Mask containing non-zero values at all voxels within some region of
         interest. When given, the centers of the searchlight patches are
         restricted to lie inside this ROI. Note that the searchlight patch
