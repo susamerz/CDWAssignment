@@ -54,7 +54,7 @@ for chunk in tqdm(np.unique(meta.chunks), desc='Preprocessing', unit='chunks'):
 # We must ensure that all times, the metadata and the bold images are in sync.
 # Hence, we first perform the operations on the `meta` pandas DataFrame. Then,
 # we can use the DataFrame's index to repeat the operations on the BOLD data.
-meta = meta[~meta['labels'].isin(['rest', 'scrambledpix'])]
+meta = meta[~meta.labels.isin(['rest', 'scrambledpix'])]
 meta = meta.sort_values('labels')
 bold = nib.Nifti1Image(bold.get_fdata()[..., meta.index],
                        bold.affine, bold.header)
