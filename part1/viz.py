@@ -1,5 +1,5 @@
 """
-Visualization functions for use the the rsa_analysis.py script.
+Visualization functions for RDM matrices.
 
 Author: Marijn van Vliet <marijn.vanvliet@aalto.fi>
 """
@@ -16,7 +16,8 @@ def plot_rdm(rdm, labels, title='RDM', output_file=None):
     rdm : ndarray, shape (n_images, n_images)
         The RDM matrix.
     labels : list of str
-        For each image, a string label indicating what kind of photo was being shown.
+        For each image, a string label indicating what kind of photo was being
+        shown.
     title : str
         Title for the plot. Defaults to 'RDM'
     output_file : path-like | None
