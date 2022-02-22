@@ -14,40 +14,40 @@ Now, it is immediately obvious that not every researcher can and should have to 
 However, we think that the fundamentals of solving this problem can and should be taught to every person interested in improving their day-to-day coding experience.
 Good code design will help you be faster, more accurate and motivated throughout a project.
 
-Therefore, we have created a three-day workshop on how to write better analysis code.
+Therefore, we have created a workshop on how to write better analysis code.
 We are now set to accept participants.
 The workshop will be held online via Zoom.
 
 Timetable for the workshop::
 
-    Monday 19.04
+    Monday 25.04.2022
         12:00 – 14:00 Lecture about code design.
                       Introduction of part 1 of the assignment.
     
-    Thursday 22.04
+    Thursday 28.04.2022
         24:00 Deadline for submitting a first version of part 1.
-              Work can continue until Monday 26.04.
+              Work can continue until Tuesday 03.05.
 
-    Friday 23.04
+    Friday 29.04
         12:00 Everyone gets assigned a project to review.
 
-    Monday 26.04
+    Tuesday 03.05
         10:00 – 14:00 Presenting the reviews for part 1.
-                      Everyone will get two timeslots: one giving and one for receiving a review.
+                      Everyone will get two timeslots: one for giving and one for receiving a review.
         14:00 Second part of the exercise will be revealed.
     
-    Thursday 29.04
+    Thursday 05.05
         24:00 Deadline for summitting a first version of part 2.
-              Work can continue until Monday 03.05.
+              Work can continue until Monday 09.05.
 
-    Monday 03.05
+    Monday 09.05
         10:00 – 14:00 Presenting the reviews for part 2.
-                      Everyone will get two timeslots: one giving and one for receiving a review.
+                      Everyone will get two timeslots: one for giving and one for receiving a review.
         14:00 - 15:00 Recap session and closing
 
 Workshop Organizers
 ===================
-This workshop is brought to you by `Susanne Merz <https://people.aalto.fi/susanne.merz>`_ of the department of Neuroscience and Biomedical Engineering (NBE), and `Marijn van Vliet <https://people.aalto.fi/marijn.vanvliet>`_, research software engineer, both from Aalto University.
+This workshop is brought to you by `Susanne Merz <https://people.aalto.fi/susanne.merz>`_ of the department of Neuroscience and Biomedical Engineering (NBE), `Thomas Pfau <https://people.aalto.fi/thomas.pfau>`_, research software engineer, and `Marijn van Vliet <https://people.aalto.fi/marijn.vanvliet>`_,of the department of Neuroscience and Biomedical Engineering (NBE), Aalto University.
 
 Pre-assignment
 ==============
@@ -65,11 +65,7 @@ Then, every group will review the work from another group, based on the design p
 This code-review process is going to be our main teaching tool in this workshop.
 We have set up some rules for code review, which you can find here: `ReviewProcess.pdf <ReviewProcess.pdf>`_.
 
-Find the instructions for the assignment here:
-
-1. `Overview of the pipeline <overview.rst>`_
-2. `The assignment, part 1: implementation instructions <implementation_part1.rst>`_
-3. `The assignment, part 2: instructions <implementation_part2.rst>`_ 
+The assignment details will be anounced during the course
 
 Lecture slides
 ==============
