@@ -20,10 +20,10 @@ def get_country_affiliations(author_affiliations, countries, match_method):
 		country_affiliations[author].update(author_countries)
 	return country_affiliations
 
-def get_n_authors_by_country(country_affiliations):
+def get_n_authors_by_country(country_affiliations, all_country_codes):
 	# country --> number of authors
-	authors_by_country = defaultdict(int)
-	for author, country in country_affiliations.items():
-		for country_code in country:
+	authors_by_country = {country_code:0 for country_code in all_country_codes}
+	for author, countries in country_affiliations.items():
+		for country_code in countries:
 			authors_by_country[country_code] += 1    
 	return authors_by_country

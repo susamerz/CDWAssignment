@@ -3,9 +3,9 @@ import csv
 from collections import defaultdict
 import xml.etree.ElementTree as ET
 
-from utils import format_name
+from utils import format_name, remove_duplicates
 
-def read_country_csv(filename, countries=defaultdict(set)):
+def read_country_csv(filename, countries=defaultdict(list)):
     with open(filename, newline='') as csvfile:
         rows = csv.reader(csvfile, delimiter=',')
         next(rows, None) # skip header
@@ -14,8 +14,9 @@ def read_country_csv(filename, countries=defaultdict(set)):
             main_name = row[1].lower()
             alt_names = row[2].lower().split('\t')
             if len(country_code) != 3:
-                country_code = row[1].lower()[:3]
-            countries[country_code].update([main_name, *alt_names])
+                country_code = main_name[:3]
+            updated_name_list = remove_duplicates([*countries[country_code], main_name, *alt_names])
+            countries[country_code] = updated_name_list
     return countries
 
 def read_xml_files(dir_path, author_xpath, affiliation_xpath, get_name_from_author, namespace={}, author_affiliations = defaultdict(set)):

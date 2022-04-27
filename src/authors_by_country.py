@@ -46,7 +46,9 @@ if __name__ == '__main__':
         country_affiliations = get_country_affiliations(author_affiliations, countries, match_method=has_substring)
         save_to(country_affiliations, country_affiliations_path)
     
-    authors_by_country = get_n_authors_by_country(country_affiliations)
+    authors_by_country = get_n_authors_by_country(country_affiliations, countries.keys())
+    # map country code to country primary name
+    authors_by_country = {countries[country_code][0]:n_authors for country_code, n_authors in authors_by_country.items()}
     list_to_csv(sorted(authors_by_country.items()), results_path)
     print(f'results saved to {results_path}')
     print(f'top 10 countries by number of authors:\n{sorted(authors_by_country.items(), key=lambda x: x[1], reverse=True)[:10]}')

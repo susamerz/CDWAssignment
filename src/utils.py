@@ -9,6 +9,10 @@ def list_to_csv(l, filename):
 		for row in l:
 			wr.writerow(row)
 
+def remove_duplicates(list):
+    # removes duplicates from a list while preserving order
+    return [*dict.fromkeys(list)]
+
 def has_substring(str, substr):
     return substr in str
 
