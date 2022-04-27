@@ -1,0 +1,9 @@
+data/*/*
+data/*.csv
+processed_data/*
+results/*
+.vscode
+.pytest_cache
+__pycache__
+.DS_Store
+!.gitkeep
