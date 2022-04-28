@@ -3,7 +3,7 @@ import csv
 from collections import defaultdict
 import xml.etree.ElementTree as ET
 
-from utils import format_name, remove_duplicates
+from utils import format_name, get_short_path, remove_duplicates
 
 def read_country_csv(filename, countries=defaultdict(list)):
     with open(filename, newline='') as csvfile:
@@ -25,7 +25,7 @@ def read_xml_files(dir_path, author_xpath, affiliation_xpath, get_name_from_auth
         try:
             tree = ET.parse(os.path.join(dir_path, filename))
         except:
-            print(f'skipping {os.path.join(dir_path, filename)}')
+            print(f'skipping {get_short_path(os.path.join(dir_path, filename))}')
             continue
         root = tree.getroot()
         for author_element in root.findall(author_xpath, namespace):

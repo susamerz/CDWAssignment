@@ -2,6 +2,10 @@ import re
 import unicodedata
 import pickle
 import csv
+from pathlib import Path
+
+def get_short_path(path):
+    return '/'.join(Path(path).parts[-2:])
 
 def list_to_csv(l, filename):
 	with open(filename, 'w') as f:
