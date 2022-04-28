@@ -1,9 +1,10 @@
-data/*/*
-data/*.csv
-processed_data/*
-results/*
+assignment_2022/data/*/*
+assignment_2022/data/*.csv
+assignment_2022/processed_data/*
+assignment_2022/results/*
 .vscode
 .pytest_cache
+.ipynb_checkpoints
 __pycache__
 .DS_Store
 !.gitkeep
