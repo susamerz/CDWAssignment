@@ -1,4 +1,4 @@
-from utils import format_name, get_short_path, has_substring, has_word, remove_duplicates
+from utils import format_name, get_short_path, has_substring, has_word, merge_values_from_dicts, remove_duplicates
 
 def test_has_word():
     assert has_word('usa', 'usa')
@@ -43,3 +43,10 @@ def test_remove_duplicates():
 
 def test_get_short_path():
     assert get_short_path('/cwd/src/./../processed_data/file.txt') == 'processed_data/file.txt'
+
+def test_merge_values_from_dicts():
+    d1 = {'a': set([1, 2]), 'b': set([3, 4])}
+    d2 = {'a': set([2, 3]), 'c': set([3, 4])}
+    d3 = {'a': set([4, 3]), 'c': set([3, 4])}
+    assert merge_values_from_dicts(d1, d2) == {'a': set([1, 2, 3]), 'b': set([3, 4]), 'c': set([3, 4])}
+    assert merge_values_from_dicts(d1, d2, d3) == {'a': set([1, 2, 3, 4]), 'b': set([3, 4]), 'c': set([3, 4])}
