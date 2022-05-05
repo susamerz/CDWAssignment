@@ -19,6 +19,7 @@ class XMLParser():
         self.affiliation_xpath = None
         self.author_affiliations = None
         self.article_xpath = None
+        self.article_id_xpath = None
     
     def get_author_affiliations(self):
         '''
@@ -75,6 +76,12 @@ class XMLParser():
         '''
         return set(article.findall(self.author_xpath))
 
+    def get_id_from_article(self, article):
+        '''
+        Get the article's ID from the given article element.
+        '''
+        return article.find(self.article_id_xpath).text
+
     def get_name_from_author(self, author_element):
         '''
         Get the author's name from the given author element. Returns None if the author's name is not valid.
@@ -98,6 +105,7 @@ class ArxivParser(XMLParser):
         self.author_xpath = './/{http://www.w3.org/2005/Atom}author'
         self.affiliation_xpath = './/{http://arxiv.org/schemas/atom}affiliation'
         self.article_xpath = './/{http://www.w3.org/2005/Atom}entry'
+        self.article_id_xpath = './/{http://www.w3.org/2005/Atom}id'
         
     def get_name_from_author(self, author_element):
         author_name = author_element.find('.//{http://www.w3.org/2005/Atom}name')
@@ -112,6 +120,7 @@ class PubmedParser(XMLParser):
         self.author_xpath = './/Affiliation/../..'
         self.affiliation_xpath = './/AffiliationInfo/Affiliation'
         self.article_xpath = './/PubmedArticle'
+        self.article_id_xpath = './/PMID'
 
     def get_name_from_author(self, author_element):
         last_name = author_element.find('.//LastName')
