@@ -5,7 +5,7 @@ import csv
 
 from utils import format_name, get_short_path, remove_duplicates
 
-class Parser():
+class XMLParser():
     def __init__(self, dir_path):
         '''
         Class for parsing XML files.
@@ -18,8 +18,9 @@ class Parser():
         self.author_xpath = None
         self.affiliation_xpath = None
         self.author_affiliations = None
+        self.article_xpath = None
     
-    def get_author_affiliations_from_xml(self):
+    def get_author_affiliations(self):
         '''
         Parse the XML files in the given directory to dict(author, set(author's affiliations)).
 
@@ -28,23 +29,55 @@ class Parser():
         author_affiliations : dict(str, set(str))
         '''
         self.author_affiliations = defaultdict(set)
+        for article in self.get_article_generator_from_xml():
+            authors = self.get_authors_from_article(article)
+            for author_element in authors:
+                author_name = self.get_name_from_author(author_element)
+                if author_name is not None:
+                    affiliation = author_element.find(self.affiliation_xpath)
+                    if affiliation is not None:
+                        self.author_affiliations[author_name].add(affiliation.text.lower())
+        return self.author_affiliations
+        
+    def get_article_generator_from_xml(self):
+        '''
+        Get the XML files from dir_path and yield the article elements.
+        
+        Yields
+        ------
+        article : ElementTree.Element
+            XML article element.
+        '''
         filenames = sorted(self.dir_path.glob('*.xml'))
         for filename in filenames:
             try:
                 tree = ET.parse(self.dir_path/filename)
             except:
-                print(f'skipping {get_short_path(self.dir_path/filename)}')
+                print(f'Skipping file: {get_short_path(self.dir_path/filename)}')
                 continue
             root = tree.getroot()
-            for author_element in root.findall(self.author_xpath):
-                author_name = self.get_name_from_author(author_element)
-                affiliation = author_element.find(self.affiliation_xpath).text.lower()
-                self.author_affiliations[author_name].add(affiliation)
-        return self.author_affiliations
+            for article in root.findall(self.article_xpath):
+                yield article
+
+    def get_authors_from_article(self, article):
+        '''
+        Get the authors from the given article.
+
+        Parameters
+        ----------
+        article : ElementTree.Element
+            XML article element.
+
+        Returns
+        -------
+        authors : set(ElementTree.Element)
+            Set of XML author elements.
+        '''
+        return set(article.findall(self.author_xpath))
 
     def get_name_from_author(self, author_element):
         '''
-        Get the author's name from the given author element.
+        Get the author's name from the given author element. Returns None if the author's name is not valid.
 
         Parameters
         ----------
@@ -54,24 +87,31 @@ class Parser():
         Returns
         -------
         author_name : str
+            Author's name. None if the author's name is not valid.
+        
         '''
         raise NotImplementedError
 
-class ArxivParser(Parser):
+class ArxivParser(XMLParser):
     def __init__(self, dir_path=Path(__file__).parent/'../data/arxiv'):
         super().__init__(dir_path)
-        self.author_xpath='.//{http://arxiv.org/schemas/atom}affiliation/..'
-        self.affiliation_xpath='.//{http://arxiv.org/schemas/atom}affiliation'
+        self.author_xpath = './/{http://www.w3.org/2005/Atom}author'
+        self.affiliation_xpath = './/{http://arxiv.org/schemas/atom}affiliation'
+        self.article_xpath = './/{http://www.w3.org/2005/Atom}entry'
         
     def get_name_from_author(self, author_element):
-        author_name = author_element.find('.//{http://www.w3.org/2005/Atom}name').text
-        return format_name(author_name)
+        author_name = author_element.find('.//{http://www.w3.org/2005/Atom}name')
+        if author_name is not None:
+            return format_name(author_name.text)
+        else:
+            return None
 
-class PubmedParser(Parser):
+class PubmedParser(XMLParser):
     def __init__(self, dir_path=Path(__file__).parent/'../data/pubmed'):
         super().__init__(dir_path)
         self.author_xpath = './/Affiliation/../..'
         self.affiliation_xpath = './/AffiliationInfo/Affiliation'
+        self.article_xpath = './/PubmedArticle'
 
     def get_name_from_author(self, author_element):
         last_name = author_element.find('.//LastName')
@@ -82,7 +122,7 @@ class PubmedParser(Parser):
             if last_name is not None:
                 last_name = last_name.text
             else:
-                last_name = '' # use empty string if neither last name nor collective name is available
+                return None # not a valid author name
         initials = author_element.find('.//Initials') # use initials as first name if available
         if initials is not None:
             first_names = initials.text
@@ -91,7 +131,7 @@ class PubmedParser(Parser):
             if forename is not None:
                 first_names = forename.text
             else:
-                first_names = '' # use empty string if neither forename nor initials are available
+                return None # not a valid author name
         return format_name(f'{first_names} {last_name}')
 
 def parse_countries_from_csv(filename=Path(__file__).parent/'../data/AltCountries.csv'):

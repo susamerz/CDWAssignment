@@ -16,8 +16,8 @@ if __name__ == '__main__':
         print(f'loaded {get_short_path(author_affiliations_path)}')
     except:
         print(f'no {get_short_path(author_affiliations_path)} found. Writing {get_short_path(author_affiliations_path)}.')
-        arxiv_author_affiliations = ArxivParser().get_author_affiliations_from_xml()
-        pubmed_author_affiliations = PubmedParser().get_author_affiliations_from_xml()
+        arxiv_author_affiliations = ArxivParser().get_author_affiliations()
+        pubmed_author_affiliations = PubmedParser().get_author_affiliations()
         author_affiliations = merge_values_from_dicts(arxiv_author_affiliations, pubmed_author_affiliations)
         save_to(author_affiliations, author_affiliations_path)
     
