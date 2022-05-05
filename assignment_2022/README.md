@@ -8,10 +8,17 @@ The table is saved to `results/authors_by_country.csv`.
 
 ## Usage
 
+Install environment:
+
+```shell
+conda env create --name author-affiliations --file environment.yml
+conda activate author-affiliations
+```
+
 Run
 
 `make`
 
 or
 
-`python3 src/authors_by_country.py`
+`python src/authors_by_country.py`
