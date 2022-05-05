@@ -9,7 +9,6 @@ if __name__ == '__main__':
 
     author_affiliations_path =  cwd/'processed_data'/'author_affiliations.pkl'
     country_affiliations_path =  cwd/'processed_data'/'country_affiliations.pkl'
-    authors_by_country_path =  cwd/'processed_data'/'authors_by_country.pkl'
     results_path = cwd/'results/authors_by_country.csv'
 
     try:
