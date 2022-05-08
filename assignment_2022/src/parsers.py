@@ -1,9 +1,25 @@
 from collections import defaultdict
+from dataclasses import dataclass, field
 from pathlib import Path
+import re
 import xml.etree.ElementTree as ET
 import csv
-
 from utils import format_name, get_short_path, remove_duplicates
+
+@dataclass(eq=True, frozen=True)
+class Article:
+	'''
+	Article class for storing article information.
+
+    Attributes
+    ----------
+    id : str
+        Article ID.
+    authors : set(ElementTree.Element)
+        Set of author elements.
+	'''
+	id: str = field(compare=True)
+	author_elements: set = field(compare=False)
 
 class XMLParser():
     def __init__(self, dir_path):
@@ -31,8 +47,7 @@ class XMLParser():
         '''
         self.author_affiliations = defaultdict(set)
         for article in self.get_article_generator_from_xml():
-            authors = self.get_authors_from_article(article)
-            for author_element in authors:
+            for author_element in article.author_elements:
                 author_name = self.get_name_from_author(author_element)
                 if author_name is not None:
                     affiliation = author_element.find(self.affiliation_xpath)
@@ -42,12 +57,11 @@ class XMLParser():
         
     def get_article_generator_from_xml(self):
         '''
-        Get the XML files from dir_path and yield the article elements.
+        Get the XML files from dir_path and yield the articles.
         
         Yields
         ------
-        article : ElementTree.Element
-            XML article element.
+        article : Article
         '''
         filenames = sorted(self.dir_path.glob('*.xml'))
         for filename in filenames:
@@ -57,8 +71,8 @@ class XMLParser():
                 print(f'Skipping file: {get_short_path(self.dir_path/filename)}')
                 continue
             root = tree.getroot()
-            for article in root.findall(self.article_xpath):
-                yield article
+            for article_element in root.findall(self.article_xpath):
+                yield self.parse_article(article_element)
 
     def get_authors_from_article(self, article):
         '''
@@ -81,6 +95,21 @@ class XMLParser():
         Get the article's ID from the given article element.
         '''
         return article.find(self.article_id_xpath).text
+
+    def parse_article(self, article_element):
+        '''
+        Parse the given article element.
+
+        Parameters
+        ----------
+        article_element : ElementTree.Element
+            XML article element.
+
+        Returns
+        -------
+        article : Article
+        '''
+        return Article(self.get_id_from_article(article_element), self.get_authors_from_article(article_element))
 
     def get_name_from_author(self, author_element):
         '''
@@ -113,6 +142,10 @@ class ArxivParser(XMLParser):
             return format_name(author_name.text)
         else:
             return None
+
+    def get_id_from_article(self, article):
+        # only use the number part of the id
+        return re.search(r'\/(\d+(\.\d+)?)', super().get_id_from_article(article)).group(1)
 
 class PubmedParser(XMLParser):
     def __init__(self, dir_path=Path(__file__).parent/'../data/pubmed'):
