@@ -27,7 +27,6 @@ setup(
             'country_network=author_affiliations.country_network:main',
         ],
     },
-    scripts=['bin/export_dependencies', 'bin/profile'],
     install_requires=['networkx'],
     long_description=readme,
     include_package_data=True,
