@@ -6,6 +6,11 @@ import networkx as nx
 from parsers import ArxivParser, PubmedParser
 from utils import get_short_path, load_from, remove_duplicates, save_to
 
+def export_cytoscape(G, filepath):
+	with open(filepath, 'w') as f:
+		json.dump(nx.cytoscape_data(G), f, indent=0)
+		print(f'exported {get_short_path(filepath)}')
+
 def add_co_author(G, pair, country_affiliations):
 	'''
 	Add the given co-author pair to the graph. If the pair already exists, increment the weight by 1. Sets attribute 'affiliated_countries' for each node.
@@ -149,13 +154,11 @@ if __name__ == '__main__':
 		fin_co_author_graph.remove_nodes_from(list(nx.isolates(fin_co_author_graph)))
 		save_to(fin_co_author_graph, fin_co_author_graph_path)
 
-	largest_connected_subgraph = fin_co_author_graph.subgraph(next(nx.connected_components(fin_co_author_graph)))
+	# get the largest connected subgraph
+	fin_co_author_graph = fin_co_author_graph.subgraph(next(nx.connected_components(fin_co_author_graph)))
 
 	# convert affiliated_countries to a list to allow for json serialization
-	for node in largest_connected_subgraph.nodes:
-		largest_connected_subgraph.nodes[node]['affiliated_countries'] = list(largest_connected_subgraph.nodes[node]['affiliated_countries'])
+	for node in fin_co_author_graph.nodes:
+		fin_co_author_graph.nodes[node]['affiliated_countries'] = list(fin_co_author_graph.nodes[node]['affiliated_countries'])
 
-	largest_connected_subgraph_path = cwd/'results'/'largest_connected_subgraph.json'
-	with open(largest_connected_subgraph_path, 'w') as f:
-		json.dump(nx.cytoscape_data(largest_connected_subgraph), f, indent=0)
-		print(f'exported {get_short_path(largest_connected_subgraph_path)}')
+	export_cytoscape(fin_co_author_graph, cwd/'results'/'fin_co_author_graph.json')
