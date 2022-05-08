@@ -8,32 +8,15 @@ Country network
 5. Export the largest connected subgraph in nx.cytoscape.json format.
 '''
 
-import networkx as nx 
+import sys
 from pathlib import Path
+import networkx as nx 
 
-from co_author_graph import export_cytoscape, weight_gte_threshold_filter, apply_edge_filter
-from utils import load_from, save_to, get_short_path
+from author_affiliations.author_network import export_cytoscape, weight_gte_threshold_filter, apply_edge_filter, get_country_network
+from author_affiliations.utils import load_from, save_to, get_short_path
 
-def add_co_author_to_country_network(co_author_graph, edge, country_network):
-	'''
-	Adds the edge's `weight` to edges between all countries in the node's `affiliated_countries` attribute.
-
-	Parameters
-	----------
-	co_author_graph : networkx.Graph
-	edge : tuple
-	country_network : networkx.Graph
-	'''
-	weight = co_author_graph.edges[edge]['weight']
-	for country_code in co_author_graph.nodes[edge[0]]['affiliated_countries']:
-		for country_code2 in co_author_graph.nodes[edge[1]]['affiliated_countries']:
-			if country_network.has_edge(country_code, country_code2):
-				country_network.edges[country_code, country_code2]['weight'] += weight
-			else:
-				country_network.add_edge(country_code, country_code2, weight=weight)
-
-if __name__ == '__main__':
-	cwd = Path(__file__).parents[1]
+def main():
+	cwd = Path(__file__).parent
 	co_author_graph = load_from(cwd/'processed_data'/'co_author_graph.pkl')
 	country_network_path = cwd/'processed_data'/'country_network.pkl'
 	try:
@@ -41,9 +24,7 @@ if __name__ == '__main__':
 		print(f'loaded country network from {get_short_path(country_network_path)}')
 	except FileNotFoundError:
 		print(f'no {get_short_path(country_network_path)} found, creating new country network')
-		country_network = nx.Graph()
-		for edge in co_author_graph.edges:
-			add_co_author_to_country_network(co_author_graph, edge, country_network)
+		country_network = get_country_network(co_author_graph)
 		save_to(country_network, country_network_path)
 
 	# filter out edges with weight less than 1000
@@ -53,3 +34,6 @@ if __name__ == '__main__':
 	# get the largest connected subgraph
 	country_network = country_network.subgraph(next(nx.connected_components(country_network)))
 	export_cytoscape(country_network, cwd/'results'/'country_network.json')
+
+if __name__ == '__main__':
+	sys.exit(main())

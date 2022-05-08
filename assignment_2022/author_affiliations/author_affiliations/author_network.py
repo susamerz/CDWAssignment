@@ -1,15 +1,26 @@
+'''
+This module contains functions for creating and manipulating co-author and country networks.
+'''
+
 import json
-from pathlib import Path
 from itertools import combinations
 import networkx as nx
 
-from parsers import ArxivParser, PubmedParser
-from utils import get_short_path, load_from, remove_duplicates, save_to
+from author_affiliations.utils import get_short_path, remove_duplicates
 
 def export_cytoscape(G, filepath):
 	with open(filepath, 'w') as f:
 		json.dump(nx.cytoscape_data(G), f, indent=0)
 		print(f'exported {get_short_path(filepath)}')
+
+def get_largest_connected_subgraph(G):
+		return G.subgraph(next(nx.connected_components(G)))
+
+def remove_isolates(G):
+	'''
+	Removes nodes that have no edges.
+	'''
+	return G.subgraph(list(nx.isolates(G)))
 
 def add_co_author(G, pair, country_affiliations):
 	'''
@@ -28,6 +39,24 @@ def add_co_author(G, pair, country_affiliations):
 		G.add_edge(*pair, weight=1)
 		for node in pair:
 			G.nodes[node]['affiliated_countries'] = country_affiliations[node]
+
+def add_co_author_to_country_network(co_author_graph, edge, country_network):
+	'''
+	Adds the edge's `weight` to edges between all countries in the node's `affiliated_countries` attribute.
+
+	Parameters
+	----------
+	co_author_graph : networkx.Graph
+	edge : tuple
+	country_network : networkx.Graph
+	'''
+	weight = co_author_graph.edges[edge]['weight']
+	for country_code in co_author_graph.nodes[edge[0]]['affiliated_countries']:
+		for country_code2 in co_author_graph.nodes[edge[1]]['affiliated_countries']:
+			if country_network.has_edge(country_code, country_code2):
+				country_network.edges[country_code, country_code2]['weight'] += weight
+			else:
+				country_network.add_edge(country_code, country_code2, weight=weight)
 
 def get_co_author_graph(parser, country_affiliations, initial_graph=None):
 	'''
@@ -58,6 +87,23 @@ def get_co_author_graph(parser, country_affiliations, initial_graph=None):
 		for pair in co_author_pairs:
 			add_co_author(co_author_graph, pair, country_affiliations)
 	return co_author_graph
+
+def get_country_network(co_author_graph):
+	'''
+	Creates a country network from the given co-author graph.
+
+	Parameters
+	----------
+	co_author_graph : networkx.Graph
+
+	Returns
+	-------
+	country_network : networkx.Graph
+	'''
+	country_network = nx.Graph()
+	for edge in co_author_graph.edges:
+		add_co_author_to_country_network(co_author_graph, edge, country_network)
+	return country_network
 
 def weight_gte_threshold_filter(G, threshold=10):
 	'''
@@ -126,39 +172,3 @@ def apply_node_filter(G, filter_function):
 		if not filter_function(node):
 			filtered_G.remove_node(node)
 	return filtered_G
-
-if __name__ == '__main__':
-	cwd = Path(__file__).parents[1]
-	co_author_graph_path = cwd/'processed_data'/'co_author_graph.pkl'
-	try:
-		co_author_graph = load_from(co_author_graph_path)
-		print(f'loaded {get_short_path(co_author_graph_path)}')
-	except FileNotFoundError:
-		print(f'no {get_short_path(co_author_graph_path)} found. Creating new graph...')
-		country_affiliations = load_from(cwd/'processed_data'/'country_affiliations.pkl') # TODO: what to do if the file is not found? proper makefile?
-		arxiv_co_author_graph = get_co_author_graph(ArxivParser(), country_affiliations)
-		co_author_graph = get_co_author_graph(PubmedParser(), country_affiliations, initial_graph=arxiv_co_author_graph)
-		save_to(co_author_graph, co_author_graph_path)
-	
-	fin_co_author_graph_path = cwd/'processed_data'/'fin_co_author_graph.pkl'
-	try:
-		fin_co_author_graph = load_from(fin_co_author_graph_path)
-		print(f'loaded {get_short_path(fin_co_author_graph_path)}')
-	except:
-		print(f'no {get_short_path(fin_co_author_graph_path)} found. Creating new graph...')
-		# filter out non-finnish authors 
-		fin_co_author_graph = apply_node_filter(co_author_graph, country_affiliation_filter(co_author_graph, 'fin'))
-		# filter out edges with weight less than 10
-		fin_co_author_graph = apply_edge_filter(fin_co_author_graph, weight_gte_threshold_filter(fin_co_author_graph, 10))
-		# drop nodes that have no edges
-		fin_co_author_graph.remove_nodes_from(list(nx.isolates(fin_co_author_graph)))
-		save_to(fin_co_author_graph, fin_co_author_graph_path)
-
-	# get the largest connected subgraph
-	fin_co_author_graph = fin_co_author_graph.subgraph(next(nx.connected_components(fin_co_author_graph)))
-
-	# convert affiliated_countries to a list to allow for json serialization
-	for node in fin_co_author_graph.nodes:
-		fin_co_author_graph.nodes[node]['affiliated_countries'] = list(fin_co_author_graph.nodes[node]['affiliated_countries'])
-
-	export_cytoscape(fin_co_author_graph, cwd/'results'/'fin_co_author_graph.json')

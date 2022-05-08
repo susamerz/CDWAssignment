@@ -1,12 +1,11 @@
+import sys
 from pathlib import Path
-from country_affiliations import get_countries_of_author, get_n_authors_by_country
-from utils import has_substring, list_to_csv, merge_values_from_dicts, save_to, load_from, get_short_path
-from parsers import ArxivParser, PubmedParser, parse_countries_from_csv
+from author_affiliations.country_affiliations import get_countries_of_author, get_n_authors_by_country
+from author_affiliations.utils import has_substring, list_to_csv, merge_values_from_dicts, save_to, load_from, get_short_path
+from author_affiliations.parsers import ArxivParser, PubmedParser, parse_countries_from_csv
 
-if __name__ == '__main__':
-
-    cwd = Path(__file__).parents[1]
-
+def main():
+    cwd = Path(__file__).parent
     author_affiliations_path =  cwd/'processed_data'/'author_affiliations.pkl'
     country_affiliations_path =  cwd/'processed_data'/'country_affiliations.pkl'
     results_path = cwd/'results/authors_by_country.csv'
@@ -36,3 +35,6 @@ if __name__ == '__main__':
     authors_by_country = {countries[country_code][0]:n_authors for country_code, n_authors in authors_by_country.items()}
     list_to_csv(sorted(authors_by_country.items()), results_path)
     print(f'results saved to {get_short_path(results_path)}')
+
+if __name__ == '__main__':
+    sys.exit(main())

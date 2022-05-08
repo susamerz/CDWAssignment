@@ -1,4 +1,4 @@
-name: author-affiliations
+name: tmp
 channels:
   - defaults
 dependencies:
@@ -19,3 +19,5 @@ dependencies:
   - wheel=0.37.1
   - xz=5.2.5
   - zlib=1.2.12
+  - pip:
+    - ./../../ # :D

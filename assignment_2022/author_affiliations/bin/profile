@@ -1,0 +1,5 @@
+#!/bin/bash
+script=$1
+lines=$2
+python -m cProfile $script.py > $script.out 
+cat $script.out | sort -rk 4,4 | awk "(NR<$lines)"

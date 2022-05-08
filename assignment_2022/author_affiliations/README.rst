@@ -1,4 +1,6 @@
-# Country Affiliator
+===================
+author_affiliations
+===================
 
 Produces a table with author affiliations by country.
 
@@ -22,3 +24,7 @@ Run
 or
 
 `python src/authors_by_country.py`
+
+Features
+--------
+
