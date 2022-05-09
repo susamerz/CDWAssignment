@@ -1,4 +1,4 @@
 #!/bin/bash
-conda env export --no-builds | grep -v 'prefix' > environment.yml
+conda env export --no-builds | grep -v 'prefix' > env.yml
 conda list -e > requirements.txt
 sed -E -i '' 's/^(.*=.*)(=.*)/\1/' requirements.txt # on osx
