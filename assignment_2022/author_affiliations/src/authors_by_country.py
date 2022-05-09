@@ -9,7 +9,7 @@ def main():
     cwd = Path(__file__).parents[1]
     author_affiliations_path =  cwd/'processed_data'/'author_affiliations.pkl'
     country_affiliations_path =  cwd/'processed_data'/'country_affiliations.pkl'
-    results_path = cwd/'results/authors_by_country.csv'
+    results_path = cwd/'results'/'authors_by_country.csv'
 
     try:
         author_affiliations = load_from(author_affiliations_path)
