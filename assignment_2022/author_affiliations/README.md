@@ -24,10 +24,10 @@ Place data in `data/` in the following format:
 ```
 data
 ├── arxiv
-│   ├── authors.xml
+│   ├── author1.xml
 │   └── ...
 ├── pubmed
-│   ├── authors.xml
+│   ├── author1.xml
 │   └── ...
 └── AltCountries.csv
 ```
