@@ -1,5 +1,7 @@
 rule all:
     input:
+        'results/authors_by_country.csv',
+        'results/fin_co_author_graph.json',
         'results/country_network.json'
 
 rule authors_by_country:

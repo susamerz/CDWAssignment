@@ -13,7 +13,7 @@ def main():
 		print(f'loaded {get_short_path(co_author_graph_path)}')
 	except FileNotFoundError:
 		print(f'no {get_short_path(co_author_graph_path)} found. Creating new graph...')
-		country_affiliations = load_from(cwd/'processed_data'/'country_affiliations.pkl') # TODO: what to do if the file is not found? proper makefile?
+		country_affiliations = load_from(cwd/'processed_data'/'country_affiliations.pkl')
 		arxiv_co_author_graph = get_co_author_graph(ArxivParser(), country_affiliations)
 		co_author_graph = get_co_author_graph(PubmedParser(), country_affiliations, initial_graph=arxiv_co_author_graph)
 		save_to(co_author_graph, co_author_graph_path)
