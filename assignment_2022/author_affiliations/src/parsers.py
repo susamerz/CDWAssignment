@@ -5,7 +5,7 @@ import re
 import xml.etree.ElementTree as ET
 import csv
 
-from author_affiliations.utils import format_name, get_short_path, remove_duplicates
+from utils import format_name, get_short_path, remove_duplicates
 
 @dataclass(eq=True, frozen=True)
 class Article:
@@ -130,7 +130,7 @@ class XMLParser():
         raise NotImplementedError
 
 class ArxivParser(XMLParser):
-    def __init__(self, dir_path=Path(__file__).parent/'data'/'arxiv'):
+    def __init__(self, dir_path=Path(__file__).parents[1]/'data'/'arxiv'):
         super().__init__(dir_path)
         self.author_xpath = './/{http://www.w3.org/2005/Atom}author'
         self.affiliation_xpath = './/{http://arxiv.org/schemas/atom}affiliation'
@@ -149,7 +149,7 @@ class ArxivParser(XMLParser):
         return re.search(r'\/(\d+(\.\d+)?)', super().get_id_from_article(article)).group(1)
 
 class PubmedParser(XMLParser):
-    def __init__(self, dir_path=Path(__file__).parent/'data'/'pubmed'):
+    def __init__(self, dir_path=Path(__file__).parents[1]/'data'/'pubmed'):
         super().__init__(dir_path)
         self.author_xpath = './/Affiliation/../..'
         self.affiliation_xpath = './/AffiliationInfo/Affiliation'
@@ -177,7 +177,7 @@ class PubmedParser(XMLParser):
                 return None # not a valid author name
         return format_name(f'{first_names} {last_name}')
 
-def parse_countries_from_csv(filename=Path(__file__).parent/'data'/'AltCountries.csv'):
+def parse_countries_from_csv(filename=Path(__file__).parents[1]/'data'/'AltCountries.csv'):
     '''
     Parse the given CSV file to dict(country_code, list(country_name)).
 

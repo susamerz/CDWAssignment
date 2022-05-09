@@ -1,4 +1,4 @@
-from author_affiliations.utils import format_name, get_short_path, has_substring, has_word, merge_values_from_dicts, remove_duplicates
+from utils import format_name, get_short_path, has_substring, has_word, merge_values_from_dicts, remove_duplicates
 
 def test_has_word():
     assert has_word('usa', 'usa')

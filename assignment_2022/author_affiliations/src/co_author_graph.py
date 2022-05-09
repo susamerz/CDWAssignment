@@ -1,12 +1,12 @@
 import sys
 from pathlib import Path
 
-from author_affiliations.parsers import ArxivParser, PubmedParser
-from author_affiliations.utils import get_short_path, load_from, save_to
-from author_affiliations.author_network import get_co_author_graph, apply_node_filter, apply_edge_filter, country_affiliation_filter, weight_gte_threshold_filter, remove_isolates, get_largest_connected_subgraph, export_cytoscape
+from parsers import ArxivParser, PubmedParser
+from utils import get_short_path, load_from, save_to
+from author_network import get_co_author_graph, apply_node_filter, apply_edge_filter, country_affiliation_filter, weight_gte_threshold_filter, remove_isolates, get_largest_connected_subgraph, export_cytoscape
 
 def main():
-	cwd = Path(__file__).parent
+	cwd = Path(__file__).parents[1]
 	co_author_graph_path = cwd/'processed_data'/'co_author_graph.pkl'
 	try:
 		co_author_graph = load_from(co_author_graph_path)

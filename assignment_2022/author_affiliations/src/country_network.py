@@ -12,11 +12,11 @@ import sys
 from pathlib import Path
 import networkx as nx 
 
-from author_affiliations.author_network import export_cytoscape, weight_gte_threshold_filter, apply_edge_filter, get_country_network
-from author_affiliations.utils import load_from, save_to, get_short_path
+from author_network import export_cytoscape, weight_gte_threshold_filter, apply_edge_filter, get_country_network
+from utils import load_from, save_to, get_short_path
 
 def main():
-	cwd = Path(__file__).parent
+	cwd = Path(__file__).parents[1]
 	co_author_graph = load_from(cwd/'processed_data'/'co_author_graph.pkl')
 	country_network_path = cwd/'processed_data'/'country_network.pkl'
 	try:

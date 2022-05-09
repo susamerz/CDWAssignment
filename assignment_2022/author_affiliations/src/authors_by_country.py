@@ -1,11 +1,12 @@
 import sys
 from pathlib import Path
-from author_affiliations.country_affiliations import get_countries_of_author, get_n_authors_by_country
-from author_affiliations.utils import has_substring, list_to_csv, merge_values_from_dicts, save_to, load_from, get_short_path
-from author_affiliations.parsers import ArxivParser, PubmedParser, parse_countries_from_csv
+
+from country_affiliations import get_countries_of_author, get_n_authors_by_country
+from utils import has_substring, list_to_csv, merge_values_from_dicts, save_to, load_from, get_short_path
+from parsers import ArxivParser, PubmedParser, parse_countries_from_csv
 
 def main():
-    cwd = Path(__file__).parent
+    cwd = Path(__file__).parents[1]
     author_affiliations_path =  cwd/'processed_data'/'author_affiliations.pkl'
     country_affiliations_path =  cwd/'processed_data'/'country_affiliations.pkl'
     results_path = cwd/'results/authors_by_country.csv'

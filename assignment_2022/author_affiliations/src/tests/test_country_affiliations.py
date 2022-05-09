@@ -1,5 +1,5 @@
-from author_affiliations.country_affiliations import is_affiliated_with_country, get_countries_of_author, get_n_authors_by_country
-from author_affiliations.utils import has_substring
+from country_affiliations import is_affiliated_with_country, get_countries_of_author, get_n_authors_by_country
+from utils import has_substring
 
 def test_is_affiliated_with_country():
 	assert is_affiliated_with_country({'university of california, berkeley, usa'}, ['usa', 'u.s.a'], has_substring)

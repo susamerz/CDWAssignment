@@ -6,7 +6,7 @@ import json
 from itertools import combinations
 import networkx as nx
 
-from author_affiliations.utils import get_short_path, remove_duplicates
+from utils import get_short_path, remove_duplicates
 
 def export_cytoscape(G, filepath):
 	with open(filepath, 'w') as f:
