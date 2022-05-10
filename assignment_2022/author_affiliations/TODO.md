@@ -8,3 +8,4 @@
 - [ ] Use classes to group code, at least for author_network
     - [ ] get_co_author_graph --> update/add to graph
 - [ ] Separate scripts from package code
+- [ ] Remove `/data` folder and give path to data as command line arg or as config var
