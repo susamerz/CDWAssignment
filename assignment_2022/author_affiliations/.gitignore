@@ -1,0 +1,13 @@
+data_copy
+data/*/*
+data/*.csv
+processed_data/*
+results/*
+.vscode
+.pytest_cache
+.ipynb_checkpoints
+__pycache__
+.DS_Store
+!.gitkeep
+
+.snakemake

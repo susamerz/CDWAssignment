@@ -1,0 +1,42 @@
+rule all:
+    input:
+        'results/authors_by_country.csv',
+        'results/fin_co_author_graph.json',
+        'results/country_network.json'
+
+rule authors_by_country:
+    input:
+        script='src/authors_by_country.py',
+    output:
+        'results/authors_by_country.csv',
+        'processed_data/author_affiliations.pkl',
+        'processed_data/country_affiliations.pkl',
+    conda:
+        'env.yml'
+    shell:
+        'python {input.script}'
+
+rule co_author_graph:
+    input:
+    	script='src/co_author_graph.py',
+        country_affiliations='processed_data/country_affiliations.pkl',
+    output:
+        'results/fin_co_author_graph.json',
+        'processed_data/co_author_graph.pkl',
+        'processed_data/fin_co_author_graph.pkl',
+    conda:
+        'env.yml'
+    shell:
+        'python {input.script}'
+
+rule country_network:
+    input:
+        script='src/country_network.py',
+        co_author_graph='processed_data/co_author_graph.pkl',
+    output:
+        'processed_data/country_network.pkl',
+        'results/country_network.json'
+    conda:
+        'env.yml'
+    shell:
+        'python {input.script}'
